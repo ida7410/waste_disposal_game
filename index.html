@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,12 +22,12 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
             overflow: hidden;
         }
 
@@ -37,23 +37,22 @@
         }
 
         .header h1 {
-            color: #333;
-            font-size: 32px;
-            margin-bottom: 10px;
+            color: #222;
+            font-size: 28px;
+            margin-bottom: 5px;
         }
 
         .header p {
-            color: #666;
-            font-size: 14px;
+            color: #777;
+            font-size: 13px;
         }
 
         .score-section {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
         }
 
         .score-item {
@@ -61,58 +60,61 @@
         }
 
         .score-item .value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
-            color: #667eea;
+            color: #333;
         }
 
         .score-item .label {
-            font-size: 12px;
-            color: #999;
+            font-size: 11px;
+            color: #888;
             text-transform: uppercase;
+            margin-top: 3px;
         }
 
         .game-section {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .item-display {
             text-align: center;
-            margin-bottom: 30px;
-            padding: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            color: #333;
         }
 
         .item-icon {
-            font-size: 80px;
-            margin-bottom: 15px;
+            font-size: 70px;
+            margin-bottom: 12px;
             display: block;
         }
 
         .item-name {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            color: #222;
         }
 
         .item-description {
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 13px;
+            color: #666;
         }
 
         .bins-container {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .bin {
-            padding: 20px;
-            border: 3px solid #ddd;
-            border-radius: 10px;
+            padding: 16px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -122,8 +124,8 @@
         }
 
         .bin:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .bin.garbage {
@@ -184,19 +186,20 @@
         }
 
         .bin-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
+            font-size: 32px;
+            margin-bottom: 8px;
         }
 
         .bin-label {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
+            color: #333;
         }
 
         .bin-sublabel {
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .bin.correct {
@@ -223,35 +226,35 @@
 
         .feedback {
             text-align: center;
-            margin-bottom: 20px;
-            min-height: 60px;
+            margin-bottom: 15px;
+            min-height: 50px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
         .feedback.correct {
-            color: #22aa22;
-            font-size: 18px;
+            color: #27ae60;
+            font-size: 16px;
             font-weight: bold;
         }
 
         .feedback.wrong {
-            color: #cc0000;
-            font-size: 18px;
+            color: #e74c3c;
+            font-size: 16px;
             font-weight: bold;
         }
 
         .feedback-text {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .explanation {
             font-size: 12px;
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 8px;
+            padding: 8px;
             background: #f5f5f5;
-            border-radius: 5px;
+            border-radius: 4px;
             color: #666;
         }
 
@@ -262,27 +265,26 @@
 
         button {
             flex: 1;
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 10px 16px;
+            font-size: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: bold;
         }
 
         .btn-next {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #333;
             color: white;
         }
 
-        .btn-next:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .btn-next:hover:not(:disabled) {
+            background: #222;
         }
 
         .btn-next:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
@@ -298,16 +300,16 @@
 
         .progress-bar {
             width: 100%;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
             margin-bottom: 20px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #333;
             transition: width 0.3s ease;
         }
 
@@ -536,6 +538,7 @@
         let correctCount = 0;
         let totalCount = 0;
         let isAnswered = false;
+        let autoAdvanceTimer = null;
 
         function loadItem() {
             if (currentItemIndex >= items.length) {
@@ -577,6 +580,11 @@
             if (isAnswered) return;
             isAnswered = true;
 
+            // Clear any existing timer
+            if (autoAdvanceTimer) {
+                clearTimeout(autoAdvanceTimer);
+            }
+
             const item = items[currentItemIndex];
             const isCorrect = selectedBin === item.correctBin;
             totalCount++;
@@ -590,6 +598,11 @@
                     <div class="feedback-text">✓ Correct! +10 points</div>
                     <div class="explanation">${item.explanation}</div>
                 `;
+
+                // Auto-advance after 5 seconds for correct answers
+                autoAdvanceTimer = setTimeout(() => {
+                    nextItem();
+                }, 5000);
             } else {
                 score = Math.max(0, score - 5);
                 document.querySelector(`[data-bin="${selectedBin}"]`).classList.add("wrong");
@@ -610,6 +623,11 @@
         }
 
         function nextItem() {
+            // Clear auto-advance timer if user clicks next manually
+            if (autoAdvanceTimer) {
+                clearTimeout(autoAdvanceTimer);
+                autoAdvanceTimer = null;
+            }
             currentItemIndex++;
             loadItem();
         }
