@@ -11,47 +11,55 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f8f9fa;
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 2%;
         }
 
         .container {
-            max-width: 700px;
-            width: 100%;
+            width: 90%;
+            max-width: 750px;
+            height: 96vh;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+            padding: 3%;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 2%;
         }
 
         .header h1 {
             color: #222;
-            font-size: 28px;
-            margin-bottom: 5px;
+            font-size: 5.5vw;
+            margin-bottom: 0.3%;
         }
 
         .header p {
             color: #777;
-            font-size: 13px;
+            font-size: 2.2vw;
         }
 
         .score-section {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 20px;
-            padding: 12px 0;
+            margin-bottom: 1.5%;
+            padding: 1% 0;
             border-bottom: 1px solid #e0e0e0;
         }
 
@@ -60,26 +68,30 @@
         }
 
         .score-item .value {
-            font-size: 22px;
+            font-size: 3.5vw;
             font-weight: bold;
             color: #333;
         }
 
         .score-item .label {
-            font-size: 11px;
+            font-size: 1.5vw;
             color: #888;
             text-transform: uppercase;
-            margin-top: 3px;
+            margin-top: 0.3%;
         }
 
         .game-section {
-            margin-bottom: 20px;
+            margin-bottom: 1.5%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
         .item-display {
             text-align: center;
-            margin-bottom: 25px;
-            padding: 25px;
+            margin-bottom: 2%;
+            padding: 2%;
             background: #f8f9fa;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
@@ -87,32 +99,32 @@
         }
 
         .item-icon {
-            font-size: 70px;
-            margin-bottom: 12px;
+            font-size: 12vw;
+            margin-bottom: 1%;
             display: block;
         }
 
         .item-name {
-            font-size: 24px;
+            font-size: 4vw;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 0.5%;
             color: #222;
         }
 
         .item-description {
-            font-size: 13px;
+            font-size: 2vw;
             color: #666;
         }
 
         .bins-container {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 1.5%;
+            margin-bottom: 2%;
         }
 
         .bin {
-            padding: 16px 12px;
+            padding: 2%;
             border: 2px solid #ddd;
             border-radius: 8px;
             text-align: center;
@@ -121,10 +133,15 @@
             background: white;
             position: relative;
             overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .bin:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
@@ -186,20 +203,20 @@
         }
 
         .bin-icon {
-            font-size: 32px;
-            margin-bottom: 8px;
+            font-size: 5vw;
+            margin-bottom: 3%;
         }
 
         .bin-label {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 2.2vw;
             color: #333;
         }
 
         .bin-sublabel {
-            font-size: 11px;
+            font-size: 1.5vw;
             color: #999;
-            margin-top: 4px;
+            margin-top: 2%;
         }
 
         .bin.correct {
@@ -226,8 +243,8 @@
 
         .feedback {
             text-align: center;
-            margin-bottom: 15px;
-            min-height: 50px;
+            margin-bottom: 1.5%;
+            min-height: 6%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -235,24 +252,24 @@
 
         .feedback.correct {
             color: #27ae60;
-            font-size: 16px;
+            font-size: 2.5vw;
             font-weight: bold;
         }
 
         .feedback.wrong {
             color: #e74c3c;
-            font-size: 16px;
+            font-size: 2.5vw;
             font-weight: bold;
         }
 
         .feedback-text {
-            margin-bottom: 8px;
+            margin-bottom: 0.5%;
         }
 
         .explanation {
-            font-size: 12px;
-            margin-top: 8px;
-            padding: 8px;
+            font-size: 1.8vw;
+            margin-top: 0.5%;
+            padding: 1%;
             background: #f5f5f5;
             border-radius: 4px;
             color: #666;
@@ -260,13 +277,14 @@
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 2%;
+            margin-top: auto;
         }
 
         button {
             flex: 1;
-            padding: 10px 16px;
-            font-size: 14px;
+            padding: 1.5% 2%;
+            font-size: 2vw;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -300,10 +318,10 @@
 
         .progress-bar {
             width: 100%;
-            height: 4px;
+            height: 0.5%;
             background: #ddd;
             border-radius: 2px;
-            margin-bottom: 20px;
+            margin-bottom: 1.5%;
             overflow: hidden;
         }
 
@@ -315,51 +333,66 @@
 
         .game-over {
             text-align: center;
-            padding: 30px;
+            padding: 3%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
         }
 
         .game-over h2 {
-            font-size: 28px;
+            font-size: 5vw;
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 2%;
         }
 
         .game-over .stats {
-            margin: 20px 0;
+            margin: 2% 0;
         }
 
         .stat-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 1% 0;
             border-bottom: 1px solid #eee;
-            font-size: 16px;
+            font-size: 2.2vw;
         }
 
         .stat-row .value {
             font-weight: bold;
-            color: #667eea;
+            color: #333;
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 1%;
+            }
+
             .container {
-                padding: 20px;
+                height: 98vh;
+                padding: 2%;
             }
 
             .header h1 {
-                font-size: 24px;
+                font-size: 7vw;
             }
 
             .item-icon {
-                font-size: 60px;
+                font-size: 15vw;
             }
 
             .item-name {
-                font-size: 22px;
+                font-size: 5vw;
             }
 
             .bins-container {
                 grid-template-columns: 1fr;
+                gap: 2%;
+            }
+
+            .bin {
+                aspect-ratio: auto;
+                min-height: 12vh;
             }
         }
     </style>
