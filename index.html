@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Sort - Toronto Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .score-section {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .score-item .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        .game-section {
+            margin-bottom: 30px;
+        }
+
+        .item-display {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .item-icon {
+            font-size: 80px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .item-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .item-description {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .bins-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .bin {
+            padding: 20px;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bin:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .bin.garbage {
+            border-color: #000;
+        }
+
+        .bin.garbage:hover {
+            background: #f0f0f0;
+            border-color: #000;
+        }
+
+        .bin.garbage::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #000;
+        }
+
+        .bin.blue {
+            border-color: #0066cc;
+        }
+
+        .bin.blue:hover {
+            background: #e6f0ff;
+            border-color: #0066cc;
+        }
+
+        .bin.blue::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #0066cc;
+        }
+
+        .bin.green {
+            border-color: #22aa22;
+        }
+
+        .bin.green:hover {
+            background: #e6ffe6;
+            border-color: #22aa22;
+        }
+
+        .bin.green::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #22aa22;
+        }
+
+        .bin-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .bin-label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .bin-sublabel {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .bin.correct {
+            animation: correctPulse 0.5s ease;
+            background: #e6ffe6;
+        }
+
+        .bin.wrong {
+            animation: wrongShake 0.5s ease;
+            background: #ffe6e6;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .feedback.correct {
+            color: #22aa22;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .feedback.wrong {
+            color: #cc0000;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .feedback-text {
+            margin-bottom: 10px;
+        }
+
+        .explanation {
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            color: #666;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: #f5f5f5;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .game-over h2 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .game-over .stats {
+            margin: 20px 0;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+
+        .stat-row .value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .item-icon {
+                font-size: 60px;
+            }
+
+            .item-name {
+                font-size: 22px;
+            }
+
+            .bins-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ Waste Sort Toronto</h1>
+            <p>Learn to sort waste like a pro!</p>
+        </div>
+
+        <div class="score-section">
+            <div class="score-item">
+                <div class="value" id="score">0</div>
+                <div class="label">Score</div>
+            </div>
+            <div class="score-item">
+                <div class="value" id="accuracy">100%</div>
+                <div class="label">Accuracy</div>
+            </div>
+            <div class="score-item">
+                <div class="value" id="round">1/10</div>
+                <div class="label">Round</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="game-section" id="gameSection" style="display: block;">
+            <div class="item-display">
+                <div class="item-icon" id="itemIcon">🍌</div>
+                <div class="item-name" id="itemName">Banana Peel</div>
+                <div class="item-description" id="itemDescription">Food waste from a snack</div>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="bins-container" id="binsContainer">
+                <div class="bin garbage" data-bin="garbage">
+                    <div class="bin-icon">🗑️</div>
+                    <div class="bin-label">GARBAGE</div>
+                    <div class="bin-sublabel">Black bin</div>
+                </div>
+                <div class="bin blue" data-bin="blue">
+                    <div class="bin-icon">♻️</div>
+                    <div class="bin-label">RECYCLING</div>
+                    <div class="bin-sublabel">Blue bin</div>
+                </div>
+                <div class="bin green" data-bin="green">
+                    <div class="bin-icon">🌱</div>
+                    <div class="bin-label">ORGANICS</div>
+                    <div class="bin-sublabel">Green bin</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-next" id="nextBtn" disabled>Next Item</button>
+                <button class="btn-reset" onclick="location.reload()">New Game</button>
+            </div>
+        </div>
+
+        <div id="gameOverSection" style="display: none;">
+            <div class="game-over">
+                <h2>🎉 Game Complete!</h2>
+                <div class="stats">
+                    <div class="stat-row">
+                        <span>Final Score</span>
+                        <span class="value" id="finalScore">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Accuracy</span>
+                        <span class="value" id="finalAccuracy">0%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Correct Sorts</span>
+                        <span class="value" id="correctSorts">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Items Sorted</span>
+                        <span class="value" id="totalItems">0</span>
+                    </div>
+                </div>
+                <button class="btn-next" onclick="location.reload()" style="margin-top: 20px;">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const items = [
+            {
+                id: 1,
+                name: "Banana Peel",
+                icon: "🍌",
+                description: "Food waste from a snack",
+                correctBin: "green",
+                explanation: "Food scraps go in the Green Bin for composting into soil."
+            },
+            {
+                id: 2,
+                name: "Aluminum Can",
+                icon: "🥫",
+                description: "Empty drink can",
+                correctBin: "blue",
+                explanation: "Metal cans are recyclable! Place in the Blue Bin."
+            },
+            {
+                id: 3,
+                name: "Styrofoam Cup",
+                icon: "☕",
+                description: "Single-use foam cup",
+                correctBin: "garbage",
+                explanation: "Styrofoam is NOT recyclable in Toronto. Goes to Garbage."
+            },
+            {
+                id: 4,
+                name: "Pizza Box (Clean)",
+                icon: "📦",
+                description: "Empty cardboard box",
+                correctBin: "blue",
+                explanation: "Cardboard is recyclable if clean and dry. Blue Bin!"
+            },
+            {
+                id: 5,
+                name: "Grass Clippings",
+                icon: "🌾",
+                description: "Yard waste from lawn",
+                correctBin: "green",
+                explanation: "Yard waste goes in Green Bin for composting."
+            },
+            {
+                id: 6,
+                name: "Glass Bottle",
+                icon: "🍾",
+                description: "Empty beverage bottle",
+                correctBin: "blue",
+                explanation: "Glass is recyclable! Place in the Blue Bin."
+            },
+            {
+                id: 7,
+                name: "Plastic Bag",
+                icon: "🛍️",
+                description: "Shopping bag",
+                correctBin: "garbage",
+                explanation: "Plastic bags jam recycling machines. Put in Garbage!"
+            },
+            {
+                id: 8,
+                name: "Apple Core",
+                icon: "🍎",
+                description: "Leftover fruit",
+                correctBin: "green",
+                explanation: "All food scraps belong in the Green Bin for composting."
+            },
+            {
+                id: 9,
+                name: "Newspaper",
+                icon: "📰",
+                description: "Used paper",
+                correctBin: "blue",
+                explanation: "Paper is recyclable. Blue Bin keeps it dry and clean."
+            },
+            {
+                id: 10,
+                name: "Greasy Pizza Box",
+                icon: "🍕",
+                description: "Pizza box with grease",
+                correctBin: "garbage",
+                explanation: "Grease contaminates recycling. Greasy boxes go to Garbage."
+            }
+        ];
+
+        let currentItemIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let totalCount = 0;
+        let isAnswered = false;
+
+        function loadItem() {
+            if (currentItemIndex >= items.length) {
+                showGameOver();
+                return;
+            }
+
+            const item = items[currentItemIndex];
+            document.getElementById("itemIcon").textContent = item.icon;
+            document.getElementById("itemName").textContent = item.name;
+            document.getElementById("itemDescription").textContent = item.description;
+            document.getElementById("feedback").textContent = "";
+            document.getElementById("feedback").className = "feedback";
+            document.getElementById("nextBtn").disabled = true;
+
+            // Clear bin styles
+            document.querySelectorAll(".bin").forEach(bin => {
+                bin.classList.remove("correct", "wrong");
+                bin.style.pointerEvents = "auto";
+            });
+
+            isAnswered = false;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = ((currentItemIndex) / items.length) * 100;
+            document.getElementById("progressFill").style.width = progress + "%";
+            document.getElementById("round").textContent = `${currentItemIndex + 1}/${items.length}`;
+        }
+
+        function updateStats() {
+            document.getElementById("score").textContent = score;
+            const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 100;
+            document.getElementById("accuracy").textContent = accuracy + "%";
+        }
+
+        function answerQuestion(selectedBin) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const item = items[currentItemIndex];
+            const isCorrect = selectedBin === item.correctBin;
+            totalCount++;
+
+            if (isCorrect) {
+                correctCount++;
+                score += 10;
+                document.querySelector(`[data-bin="${selectedBin}"]`).classList.add("correct");
+                document.getElementById("feedback").className = "feedback correct";
+                document.getElementById("feedback").innerHTML = `
+                    <div class="feedback-text">✓ Correct! +10 points</div>
+                    <div class="explanation">${item.explanation}</div>
+                `;
+            } else {
+                score = Math.max(0, score - 5);
+                document.querySelector(`[data-bin="${selectedBin}"]`).classList.add("wrong");
+                document.querySelector(`[data-bin="${item.correctBin}"]`).classList.add("correct");
+                document.getElementById("feedback").className = "feedback wrong";
+                document.getElementById("feedback").innerHTML = `
+                    <div class="feedback-text">✗ Wrong! -5 points</div>
+                    <div class="explanation">This goes in the ${item.correctBin.toUpperCase()} bin. ${item.explanation}</div>
+                `;
+            }
+
+            document.querySelectorAll(".bin").forEach(bin => {
+                bin.style.pointerEvents = "none";
+            });
+
+            document.getElementById("nextBtn").disabled = false;
+            updateStats();
+        }
+
+        function nextItem() {
+            currentItemIndex++;
+            loadItem();
+        }
+
+        function showGameOver() {
+            document.getElementById("gameSection").style.display = "none";
+            document.getElementById("gameOverSection").style.display = "block";
+
+            const accuracy = Math.round((correctCount / totalCount) * 100);
+            document.getElementById("finalScore").textContent = score;
+            document.getElementById("finalAccuracy").textContent = accuracy + "%";
+            document.getElementById("correctSorts").textContent = correctCount;
+            document.getElementById("totalItems").textContent = totalCount;
+        }
+
+        // Event listeners
+        document.querySelectorAll(".bin").forEach(bin => {
+            bin.addEventListener("click", function() {
+                answerQuestion(this.dataset.bin);
+            });
+        });
+
+        document.getElementById("nextBtn").addEventListener("click", nextItem);
+
+        // Load first item
+        loadItem();
+    </script>
+</body>
+</html>
