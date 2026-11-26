@@ -8,9 +8,15 @@ A web game that teaches Toronto waste sorting by acting out the real steps: pour
 
 ## Run locally
 ```
-python3 -m http.server 8000
+python3 -m http.server 8000   # on Windows: python -m http.server 8000
 ```
 Then open http://localhost:8000. (Opening `index.html` directly won't load the JSON.)
+
+## Tests (Node 22+)
+```
+node --test "tests/*.test.mjs"
+node scripts/validate.mjs
+```
 
 ## Deploy
 Push to GitHub, then Settings → Pages → deploy from the `main` branch, root folder.

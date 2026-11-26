@@ -15,17 +15,19 @@ SortRight is a static web game that teaches Toronto waste sorting by having play
 `fetch()` does not work from `file://`, so serve the folder:
 
 ```
-python3 -m http.server 8000
+python3 -m http.server 8000   # on Windows: python -m http.server 8000
 # open http://localhost:8000
 ```
 
 ## Tests
-Pure logic (state, scoring, flow) lives in modules with no DOM access and is tested with Node's built-in runner (no dependencies):
+Pure logic (state, scoring, flow) lives in modules with no DOM access and is tested with Node's built-in runner (no dependencies). Requires **Node 22 or newer** (glob support in `--test`). Name test files `*.test.mjs`.
 
 ```
-node --test tests/
+node --test "tests/*.test.mjs"
 node scripts/validate.mjs
 ```
+
+Keep the quotes around the glob so Node expands it, not the shell (works the same on macOS, Linux and Windows).
 
 Before finishing any task: run the tests, load the page in a browser at 390×844 and at desktop width, and check the browser console has no errors.
 
@@ -88,6 +90,6 @@ tests/
 
 ## Definition of done (per feature)
 - Works with touch and mouse, and has a keyboard/button alternative.
-- No console errors; `node --test tests/` passes.
+- No console errors; `node --test "tests/*.test.mjs"` passes.
 - Looks right at 360 px and desktop widths.
 - Reads all rules from `items.json`.
