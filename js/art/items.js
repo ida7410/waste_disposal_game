@@ -46,7 +46,12 @@ const ART = {
   'wine-bottle': ['wine', '#3f7d4a'],
 };
 
+/** [shapeName, mainColour] for an item id. */
+export function artFor(itemId) {
+  return ART[itemId] ?? ['generic', '#c9d2dc'];
+}
+
 export function itemSvg(itemId) {
-  const [shape, color] = ART[itemId] ?? ['generic', '#c9d2dc'];
+  const [shape, color] = artFor(itemId);
   return `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">${SHAPES[shape](color)}</svg>`;
 }

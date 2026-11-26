@@ -2,9 +2,9 @@
 import { el, mount } from './dom.js';
 import { percent, summaryHeading } from './text.js';
 
-const MODES = [
+export const MODES = [
   { id: 'quick-sort', name: 'Quick Sort', blurb: 'Pick the right bin for each item.', ready: true },
-  { id: 'prep-sort', name: 'Prep & Sort', blurb: 'Pour, scrape and put lids on, then sort.', ready: false },
+  { id: 'prep-sort', name: 'Prep & Sort', blurb: 'Pour it out, put the lid on, then sort.', ready: true },
   { id: 'ask-questions', name: 'Ask the Questions', blurb: 'Learn the questions that sort anything.', ready: false },
 ];
 
@@ -22,11 +22,11 @@ export function renderHome(root, { onMode }) {
       el('span', { class: 'card-sub' }, m.ready ? m.blurb : `${m.blurb} Coming soon.`)))))));
 }
 
-export function renderLevels(root, { levels, onPick, onBack }) {
+export function renderLevels(root, { modeName, levels, onPick, onBack }) {
   mount(root, el('div', { class: 'screen menu' },
     el('header', { class: 'topbar' },
       el('button', { class: 'btn btn-ghost', type: 'button', onclick: onBack }, '‹ Home'),
-      el('h1', { class: 'topbar-title', tabindex: '-1', 'data-autofocus': true }, 'Quick Sort: choose a level')),
+      el('h1', { class: 'topbar-title', tabindex: '-1', 'data-autofocus': true }, `${modeName}: choose a level`)),
     el('ul', { class: 'card-list', role: 'list' }, levels.map((l) => el('li', {},
       el('button', {
         class: 'card', type: 'button', disabled: l.count === 0,
