@@ -1,6 +1,7 @@
 // Drag-to-target with Pointer Events: one code path for touch, mouse and pen.
-// A press that barely moves counts as a tap. The element needs
-// `touch-action: none` in CSS so the page doesn't scroll while dragging.
+// A press that barely moves counts as a tap. Give the element the
+// `draggable` class (touch-action: none) so the page doesn't scroll while dragging.
+// Not used by Quick Sort (bins are plain buttons there); kept for Prep & Sort.
 
 const TAP_SLOP = 8; // px a pointer may move and still count as a tap
 

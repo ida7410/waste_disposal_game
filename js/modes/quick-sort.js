@@ -1,20 +1,19 @@
-// Quick Sort (SPEC.md 4.1): pick the bin. Drag the item to a bin, tap the
-// item then a bin, or just press a bin button (keyboard too). All three call choose().
+// Quick Sort (SPEC.md 4.1): pick the bin. Bins are buttons, so tap, click
+// and keyboard all go through choose(). No dragging here (that's Prep & Sort).
 import { el, mount, announce } from '../dom.js';
 import { createRound, currentItem, answer, next, isDone, summarize, score } from '../round.js';
 import { prepSentence, resultHeading } from '../text.js';
 import { emit } from '../events.js';
 import { binIconSvg } from '../art/bins.js';
 import { itemSvg } from '../art/items.js';
-import { attachDrag } from '../drag.js';
 
 const MODE = 'quick-sort';
+const HINT = 'Which bin does it go in? Tap a bin.';
 
 export function startQuickSort(root, { bins, items, level, title, practice = false, onExit, onFinish }) {
   let round = createRound(items, { level, practice });
   let shownAt = 0;
   let answered = false;
-  let selected = false;
   const binLabel = (id) => bins.find((b) => b.id === id)?.label ?? id;
 
   const progressEl = el('span', { class: 'pill' });
@@ -33,13 +32,6 @@ export function startQuickSort(root, { bins, items, level, title, practice = fal
     onclick: () => choose(b.id),
   }, el('span', { class: 'bin-icon', html: binIconSvg(b.id) }), el('span', { class: 'bin-label' }, b.label)));
 
-  const drag = attachDrag(itemEl, {
-    targets: binEls,
-    canStart: () => !answered,
-    onTap: toggleSelected,
-    onDrop: (binEl) => choose(binEl.dataset.bin),
-  });
-
   mount(root, el('div', { class: 'screen play' },
     el('header', { class: 'topbar' },
       el('button', { class: 'btn btn-ghost', type: 'button', onclick: exit }, '‹ Levels'),
@@ -54,11 +46,9 @@ export function startQuickSort(root, { bins, items, level, title, practice = fal
   function showItem() {
     const item = currentItem(round);
     answered = false;
-    selected = false;
     itemEl.innerHTML = itemSvg(item.id);
-    itemEl.classList.remove('is-selected');
     nameEl.textContent = item.name;
-    hintEl.textContent = 'Drag it into a bin, or tap a bin.';
+    hintEl.textContent = HINT;
     hintEl.hidden = false;
     feedback.hidden = true;
     root.querySelector('.stage').classList.remove('has-feedback');
@@ -73,17 +63,9 @@ export function startQuickSort(root, { bins, items, level, title, practice = fal
     shownAt = performance.now();
   }
 
-  function toggleSelected() {
-    selected = !selected;
-    itemEl.classList.toggle('is-selected', selected);
-    hintEl.textContent = selected ? 'Now tap a bin.' : 'Drag it into a bin, or tap a bin.';
-  }
-
   function choose(binId) {
     if (answered || isDone(round)) return;
     answered = true;
-    selected = false;
-    itemEl.classList.remove('is-selected');
     const ms = Math.round(performance.now() - shownAt);
     const out = answer(round, binId, ms);
     round = out.round;
@@ -118,7 +100,6 @@ export function startQuickSort(root, { bins, items, level, title, practice = fal
     round = next(round);
     if (!isDone(round)) return showItem();
     const summary = summarize(round);
-    drag.stop();
     emit('level_end', {
       mode: MODE, level, practice, correct: summary.correct, total: summary.total,
       accuracy: summary.accuracy, score: summary.score,
@@ -127,9 +108,9 @@ export function startQuickSort(root, { bins, items, level, title, practice = fal
   }
 
   function exit() {
-    drag.stop();
     onExit();
   }
 
-  return { stop: drag.stop };
+  // All listeners live on this screen's own elements, so there is nothing to tear down.
+  return { stop() {} };
 }

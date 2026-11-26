@@ -88,17 +88,18 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 }
 .item {
   width: min(46vw, 190px, 26vh); aspect-ratio: 1; position: relative; z-index: 10;
-  touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+  user-select: none; -webkit-user-select: none;
   border-radius: var(--radius); transition: transform .25s ease, width .2s ease;
 }
 .item svg { width: 100%; height: 100%; display: block; pointer-events: none; }
-.item.is-dragging { cursor: grabbing; transition: none; filter: drop-shadow(var(--shadow-lift)); }
-.item.is-selected { outline: 3px dashed var(--color-accent); outline-offset: 6px; }
+/* For elements wired up with js/drag.js (Prep & Sort). */
+.draggable { touch-action: none; cursor: grab; }
+.draggable.is-dragging { cursor: grabbing; transition: none; filter: drop-shadow(var(--shadow-lift)); }
 .item-name { font-size: 1.3rem; font-weight: 700; text-align: center; }
 .hint { color: var(--color-muted); text-align: center; }
 
 .stage.has-feedback { justify-content: flex-start; }
-.stage.has-feedback .item { width: min(28vw, 110px, 16vh); cursor: default; }
+.stage.has-feedback .item { width: min(28vw, 110px, 16vh); }
 .stage.has-feedback .item-name { font-size: 1.1rem; }
 
 .feedback {

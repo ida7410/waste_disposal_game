@@ -39,8 +39,8 @@ People learn sorting rules in quizzes but still sort incorrectly at the real bin
 
 ## 4. Game modes
 
-### 4.1 Quick Sort (tap/drag to bin)
-- One item at a time. Player drags it (or taps it, then taps a bin) into one of the bins in `bins`.
+### 4.1 Quick Sort (tap a bin)
+- One item at a time. Player taps (or clicks, or uses the keyboard on) one of the bins in `bins`. No dragging in this mode; drag gestures belong to Prep & Sort.
 - Quick Sort is about choosing the bin only. It does not check or change item state.
 - For items with `steps`, the feedback lists the prep in plain words, e.g. "Before binning: pour it out, put the lid on." Checking state is Prep & Sort's job.
 - Correct: short positive feedback + the item's `reason`.
