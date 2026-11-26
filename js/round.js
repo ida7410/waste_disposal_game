@@ -38,13 +38,38 @@ export function isAnswered(round) {
   return round.results.length > round.index;
 }
 
-/** Record the player's bin for the current item. Answering twice keeps the first answer. */
+/**
+ * Record a scored result ({ itemId, correct, points, ... }) for the current item.
+ * Recording twice keeps the first result.
+ */
+export function record(round, result) {
+  if (!currentItem(round)) throw new Error('No current item to answer.');
+  if (isAnswered(round)) return { round, result: round.results[round.index] };
+  return { round: { ...round, results: [...round.results, result] }, result };
+}
+
+/** Quick Sort: score a bin choice for the current item and record it. */
 export function answer(round, binId, ms = 0) {
   const item = currentItem(round);
   if (!item) throw new Error('No current item to answer.');
-  if (isAnswered(round)) return { round, result: round.results[round.index] };
-  const result = { ...scoreSort(item, binId), ms };
-  return { round: { ...round, results: [...round.results, result] }, result };
+  return record(round, { ...scoreSort(item, binId), ms });
+}
+
+/** How many items come after the current one. */
+export function remaining(round) {
+  return Math.max(0, round.items.length - round.index - 1);
+}
+
+/**
+ * "Carry it" (SPEC.md 4.2): move the current, unanswered item `by` places
+ * later, so it comes back after that many other items (or last, if fewer remain).
+ */
+export function defer(round, by = 2) {
+  if (isAnswered(round) || !currentItem(round)) return round;
+  const items = [...round.items];
+  const [item] = items.splice(round.index, 1);
+  items.splice(Math.min(round.index + by, items.length), 0, item);
+  return { ...round, items };
 }
 
 export function next(round) {

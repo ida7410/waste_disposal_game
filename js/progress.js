@@ -1,7 +1,8 @@
-// Local progress (best accuracy per level). No DOM.
+// Local progress: best accuracy per mode and level. No DOM.
 // Every storage call is wrapped: the game must work when storage is blocked.
+// Shape: { modes: { 'quick-sort': { 1: { best: 0.9 } } } }
 
-const KEY = 'sortright.progress.v1';
+const KEY = 'sortright.progress.v2';
 
 function defaultStore() {
   try {
@@ -21,18 +22,20 @@ export function loadProgress(store = defaultStore()) {
   }
 }
 
-export function bestAccuracy(level, store = defaultStore()) {
-  const best = loadProgress(store).levels?.[level]?.best;
+export function bestAccuracy(mode, level, store = defaultStore()) {
+  const best = loadProgress(store).modes?.[mode]?.[level]?.best;
   return typeof best === 'number' ? best : null;
 }
 
-export function recordLevel(level, accuracy, store = defaultStore()) {
+export function recordLevel(mode, level, accuracy, store = defaultStore()) {
   try {
     const progress = loadProgress(store);
-    const levels = progress.levels && typeof progress.levels === 'object' ? progress.levels : {};
+    const modes = progress.modes && typeof progress.modes === 'object' ? progress.modes : {};
+    const levels = modes[mode] && typeof modes[mode] === 'object' ? modes[mode] : {};
     const prev = levels[level]?.best ?? 0;
     levels[level] = { best: Math.max(prev, accuracy) };
-    store?.setItem(KEY, JSON.stringify({ ...progress, levels }));
+    modes[mode] = levels;
+    store?.setItem(KEY, JSON.stringify({ ...progress, modes }));
     return true;
   } catch {
     return false;
