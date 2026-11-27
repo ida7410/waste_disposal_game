@@ -7,7 +7,8 @@ import {
 } from '../js/flow.js';
 import { scoreQuestions, POINTS } from '../js/scoring.js';
 import { isUnlocked, recordLevel, UNLOCK_ACCURACY } from '../js/progress.js';
-import { askHeading, missedQuestionText, emptyFact, prepDoneText } from '../js/text.js';
+import { askHeading, missedQuestionText, emptyFact, prepDoneText, labelReadText, noLabelText } from '../js/text.js';
+import { labelCaption } from '../js/art/prep-art.js';
 
 const real = JSON.parse(readFileSync(new URL('../data/items.json', import.meta.url), 'utf8'));
 const flow = createFlow(real);
@@ -157,6 +158,15 @@ test('Ask copy: headings, missed text, what the item holds, prep text', () => {
   assert.equal(emptyFact({}), 'It’s already empty.');
   assert.equal(prepDoneText({ liquid: true, lid: false }, { liquidTo: 'sink' }), 'Pour it into the sink. Then put the lid back on.');
   assert.equal(prepDoneText({ food: true }, { scrapsLabel: 'Green Bin' }), 'Scrape the food into the Green Bin.');
+});
+
+test('Read label: every item with a "flip" step has words for its label; others say there is nothing special', () => {
+  for (const item of real.items.filter((it) => it.steps.includes('flip'))) {
+    assert.ok(labelCaption(item.id).length > 10, `${item.id} needs a caption`);
+  }
+  assert.equal(labelCaption('milk-carton'), '');
+  assert.equal(labelReadText(labelCaption('compostable-cup')), 'The label says “COMPOSTABLE”.');
+  assert.ok(noLabelText().startsWith('Nothing special on the label'));
 });
 
 function memoryStore() {

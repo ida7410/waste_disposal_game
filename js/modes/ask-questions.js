@@ -6,10 +6,10 @@ import { el, mount, announce } from '../dom.js';
 import { createRound, currentItem, record, next, isDone, summarize, score } from '../round.js';
 import { createFlow, nodeById, startWalk, answerWalk, currentPrompt, destinationOf } from '../flow.js';
 import { scoreQuestions } from '../scoring.js';
-import { askHeading, missedQuestionText, emptyFact, prepDoneText } from '../text.js';
+import { askHeading, missedQuestionText, emptyFact, prepDoneText, labelReadText, noLabelText } from '../text.js';
 import { emit } from '../events.js';
 import { binIconSvg } from '../art/bins.js';
-import { drawWithLabelShowing } from '../art/prep-art.js';
+import { drawPrepItem, drawWithLabelShowing, labelCaption } from '../art/prep-art.js';
 import { createItemState } from '../state.js';
 
 const MODE = 'ask-questions';
@@ -27,6 +27,9 @@ export function startAskQuestions(root, { data, items, level, title, practice = 
   const scoreEl = el('span', { class: 'pill' });
   const artEl = el('div', { class: 'item ask-art', 'aria-hidden': 'true' });
   const nameEl = el('p', { class: 'item-name' });
+  // Same habit as Prep & Sort: the label only shows once the player checks it.
+  const labelBtn = el('button', { class: 'btn btn-small', type: 'button', onclick: readLabel }, 'Read label');
+  const labelText = el('p', { class: 'label-text', hidden: true });
   const trailEl = el('ol', { class: 'trail', 'aria-label': 'Your answers' });
   const qNum = el('p', { class: 'card-kicker' });
   const qText = el('h2', { class: 'question-text', id: 'ask-q' });
@@ -47,7 +50,7 @@ export function startAskQuestions(root, { data, items, level, title, practice = 
       el('button', { class: 'btn btn-ghost', type: 'button', onclick: exit }, '‹ Levels'),
       el('h1', { class: 'topbar-title', tabindex: '-1', 'data-autofocus': true }, practice ? `${title}: practice` : title),
       progressEl, scoreEl),
-    el('section', { class: 'stage ask-stage', 'aria-label': 'Item' }, el('div', { class: 'ask-item' }, artEl, nameEl), trailEl, qCard, feedback)));
+    el('section', { class: 'stage ask-stage', 'aria-label': 'Item' }, el('div', { class: 'ask-item' }, artEl, el('div', { class: 'ask-item-info' }, nameEl, labelBtn)), labelText, trailEl, qCard, feedback)));
 
   const onKey = (e) => {
     if (!prompt || e.target.closest?.('input, textarea')) return;
@@ -65,8 +68,10 @@ export function startAskQuestions(root, { data, items, level, title, practice = 
   function showItem() {
     const item = currentItem(round);
     walk = startWalk(flow, item);
-    artEl.innerHTML = drawWithLabelShowing(item);
+    artEl.innerHTML = drawPrepItem(item, createItemState(item)).svg;
     nameEl.textContent = item.name;
+    labelBtn.disabled = false;
+    labelText.hidden = true;
     trailEl.replaceChildren();
     feedback.hidden = true;
     qCard.hidden = false;
@@ -74,6 +79,19 @@ export function startAskQuestions(root, { data, items, level, title, practice = 
     scoreEl.textContent = `${score(round)} pts`;
     shownAt = performance.now();
     showPrompt(`Item ${round.index + 1} of ${round.items.length}: ${item.name}.`);
+  }
+
+  // Items whose steps include "flip" have a label worth reading (it's drawn
+  // once read); every other item says there's nothing special on it.
+  function readLabel() {
+    const item = walk?.item;
+    if (!item) return;
+    const hasLabel = Array.isArray(item.steps) && item.steps.includes('flip');
+    if (hasLabel) artEl.innerHTML = drawWithLabelShowing(item);
+    labelText.textContent = hasLabel ? labelReadText(labelCaption(item.id)) : noLabelText();
+    labelText.hidden = false;
+    labelBtn.disabled = true;
+    announce(labelText.textContent);
   }
 
   function showPrompt(prefix = '') {

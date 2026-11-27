@@ -95,6 +95,16 @@ export function missedQuestionText(question, expectedLabels) {
   return `The tricky one was “${question}” For this item: ${expectedLabels.join(' or ')}.`;
 }
 
+/** Ask the Questions "Read label": the label is now drawn on the item; caption says what's on it. */
+export function labelReadText(caption = '') {
+  return caption || 'You read the label. Check the picture for what it says.';
+}
+
+/** Ask the Questions "Read label" on an item with nothing special printed on it. */
+export function noLabelText() {
+  return 'Nothing special on the label: no “compostable” or “biodegradable”, and no hazard symbol.';
+}
+
 /** What the item really holds, for a miss on "Is it empty?" (SPEC.md 4.3). */
 export function emptyFact(state) {
   if (state.liquid === true && state.food === true) return 'It still has food and liquid in it.';
