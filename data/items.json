@@ -734,7 +734,7 @@
     },
     {
       "id": "spray-paint",
-      "name": "Spray paint can with a flammable symbol",
+      "name": "Spray paint can",
       "level": 4,
       "bin": "special",
       "exitNode": "leaf-special",

@@ -47,13 +47,14 @@ const TAPE = {
 };
 const LABELS = {
   'compostable-cup': `<rect x="36" y="78" width="48" height="16" rx="4" fill="#fff" ${O}/><text x="60" y="89.5" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui,sans-serif" fill="#2e7d32" textLength="40" lengthAdjust="spacingAndGlyphs">COMPOSTABLE</text>`,
-  'spray-paint': `<path d="M60 70l14 14-14 14-14-14z" fill="#fff" stroke="#c0392b" stroke-width="3"/><path d="M60 77c4 4 5 8 1 13-1-4-4-4-4-8 0 4-3 5-3 8-2-5 2-10 6-13z" fill="#c0392b"/>`,
+  // A text label for now; real hazard symbols to come (owner is checking which ones).
+  'spray-paint': `<rect x="36" y="72" width="48" height="16" rx="4" fill="#fff" ${O}/><text x="60" y="83.5" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui,sans-serif" fill="#b03a2e" textLength="38" lengthAdjust="spacingAndGlyphs">FLAMMABLE</text>`,
 };
 // What each drawn label shows, in words: the picture can be too small to read,
 // and screen readers can't see it. Describes the drawing above, not a rule.
 const LABEL_CAPTIONS = {
   'compostable-cup': 'The label says “COMPOSTABLE”.',
-  'spray-paint': 'The label has a red flame symbol: flammable.',
+  'spray-paint': 'The label says “FLAMMABLE”.',
 };
 
 /** Words for an item's drawn label, or '' if it has none. */
