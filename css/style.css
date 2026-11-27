@@ -166,8 +166,27 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 }
 .sink { width: min(36vw, 160px); flex: none; }
 .sink svg { width: 100%; display: block; }
-.sink .stream { opacity: 0; transition: opacity .15s; }
+.sink .stream, .sink .tap-stream { opacity: 0; transition: opacity .15s; }
 .sink.is-pouring .stream { opacity: .9; }
+.sink.is-rinsing .tap-stream { opacity: .9; }
+
+/* Rinse: progress ring around the item while it's held under the tap. */
+.rinse-ring {
+  position: absolute; inset: -8px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: conic-gradient(#4ea3ea calc(var(--p, 0) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+}
+.rinse-ring.is-on { opacity: 1; }
+
+/* Scrape: blobs fade as they're rubbed; the scraps fly to their bin. */
+.tilt circle.blob { transition: opacity .15s; }
+.item-holder.is-scraping .item { cursor: crosshair; }
+.scrap-fly {
+  position: fixed; z-index: 50; width: 24px; height: 24px; border-radius: 45% 55% 50% 40%;
+  background: #b2472e; box-shadow: 8px 4px 0 -3px #c76b2e, -6px 6px 0 -4px #e0a030; pointer-events: none;
+}
+.bin.is-fed { transform: scale(1.06); box-shadow: 0 0 0 3px var(--bin-color); }
 .item-holder.is-spilling::after {
   content: ""; position: absolute; left: 70%; top: 55%; width: 10px; height: 10px; border-radius: 50%;
   background: #4ea3ea; box-shadow: 8px 18px 0 -1px #4ea3ea, -6px 34px 0 -2px #4ea3ea, 10px 50px 0 -2px #4ea3ea;
@@ -221,6 +240,36 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .splash .splash-stain { animation: stain .6s .15s ease-out both; transform-origin: 30px 32px; }
 @keyframes burst { from { transform: scale(.2); opacity: 0; } }
 @keyframes stain { from { transform: scale(0); } }
+
+/* ---- Ask the Questions ---- */
+.ask-stage { justify-content: flex-start; gap: 12px; }
+.ask-item { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; }
+.ask-art { width: min(24vw, 96px, 14vh); flex: none; }
+.ask-art svg { width: 100%; height: 100%; display: block; }
+.ask .item-name { text-align: left; font-size: 1.2rem; }
+.trail { width: 100%; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.trail li {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-size: .9rem;
+  padding: 6px 10px; border-radius: var(--radius-small); background: var(--color-surface);
+}
+.trail-q { color: var(--color-muted); flex: 1 1 14rem; min-width: 0; }
+.trail li.is-ok strong { color: var(--color-good); }
+.trail li.is-miss strong { color: var(--color-try); }
+.trail-note { width: 100%; font-size: .85rem; color: var(--color-accent); }
+.question {
+  width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 16px;
+  background: var(--color-surface); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.question-text { font-size: 1.2rem; line-height: 1.3; }
+.question-note { font-size: .9rem; color: var(--color-try); }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.answer { min-height: 56px; font-size: 1.15rem; }
+.dest { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+
+/* Locked levels and unlock messages */
+.card.is-locked .card-kicker, .card.is-locked .card-sub { color: var(--color-muted); }
+.unlock-note { font-weight: 700; color: var(--color-try); background: var(--color-try-soft); padding: 8px 12px; border-radius: var(--radius-small); margin-top: 6px; }
+.unlock-note.is-unlocked { color: var(--color-good); background: var(--color-good-soft); }
 
 @media (min-width: 600px) {
   .app { padding-top: 24px; }
