@@ -1,5 +1,7 @@
 // Prep & Sort workstation: the item (drag it to the sink or into a bin), the
 // sink, a loose cap, the level's tool buttons and "Can't empty it now".
+// Nothing on screen names the item's state or the step it needs: the player
+// reads it from the drawing.
 // It runs the interactions but never changes state: finished actions are
 // reported with onAction(action), and the mode calls render() with the new state.
 import { el } from '../dom.js';
@@ -31,11 +33,14 @@ export function createStation({ tools, binEls, onAction, onNoop, onBin, onCantEm
   const handle = el('div', { class: 'tilt-handle', 'aria-hidden': 'true', title: 'Turn to pour' }, '↻');
   const holder = el('div', { class: 'item-holder', 'aria-hidden': 'true' }, itemEl, handle);
   const sink = tools.includes('pour') ? el('div', { class: 'sink', 'aria-hidden': 'true', html: sinkSvg() }) : null;
-  const chips = el('ul', { class: 'chips', role: 'list', 'aria-label': 'Item state' });
+  // State is shown in the drawing only, so the player has to notice it.
+  // Screen-reader users can't see the drawing, so they get it as hidden text.
+  const stateDesc = el('p', { class: 'sr-only state-desc' });
   const toolBtns = tools.map((a) => el('button', { class: 'btn tool', type: 'button', 'data-action': a, onclick: () => useTool(a) }, toolLabel(a)));
-  const cantBtn = el('button', { class: 'btn btn-ghost tool-cant', type: 'button', onclick: () => onCantEmpty() }, 'Can’t empty it now');
+  // Always shown (not only for full items), so it doesn't give the answer away.
+  const cantBtn = el('button', { class: 'btn btn-ghost tool-cant', type: 'button', onclick: cantEmpty }, 'Can’t empty it now');
 
-  const rootEl = el('div', { class: `station${sink ? ' has-sink' : ''}` }, chips, el('div', { class: 'bench' }, holder, sink));
+  const rootEl = el('div', { class: `station${sink ? ' has-sink' : ''}` }, stateDesc, el('div', { class: 'bench' }, holder, sink));
   const toolsEl = el('div', { class: 'tools', role: 'group', 'aria-label': 'Prep tools' }, toolBtns, cantBtn);
 
   let item = null;
@@ -60,15 +65,18 @@ export function createStation({ tools, binEls, onAction, onNoop, onBin, onCantEm
     busy = false;
     const art = drawPrepItem(item, state);
     tilt.innerHTML = art.svg;
-    chips.replaceChildren(...stateChips(state).map((t) => el('li', { class: 'chip' }, t)));
-    cantBtn.hidden = !needsEmptying(state);
-    handle.hidden = !(state.liquid && sink);
+    const words = stateChips(state);
+    stateDesc.textContent = words.length ? `It looks like: ${words.join(', ').toLowerCase()}.` : '';
+    handle.hidden = !sink;
     stopInteractions();
     const rm = reducedMotion();
-    if (state.liquid && sink) {
+    if (sink) {
+      // Runs for empty items too, so the handle always works; nothing flows then.
       pour.start(holder, state, () => finished('pour'), {
         tiltEl: tilt, handleEl: handle, sinkEl: sink, isDocked: () => docked,
-        onFill: (f) => setFill(tilt, f), onSpill: () => say('Pour it into a sink or drain.'), reducedMotion: rm,
+        onFill: (f) => setFill(tilt, f), onSpill: () => say('Pour it into a sink or drain.'),
+        onEmpty: () => { onNoop('pour'); say(nothingToDoText('pour')); },
+        reducedMotion: rm,
       });
     }
     if (state.lid === false && art.cap) {
@@ -83,6 +91,16 @@ export function createStation({ tools, binEls, onAction, onNoop, onBin, onCantEm
   function finished(action) {
     if (action === 'pour') setTimeout(undock, reducedMotion() ? 0 : 300);
     onAction(action);
+  }
+
+  function cantEmpty() {
+    if (!item || busy) return;
+    if (needsEmptying(state)) {
+      onCantEmpty();
+      return;
+    }
+    onNoop('cant-empty');
+    say('There’s nothing to empty out of this one.');
   }
 
   function useTool(action) {
@@ -112,7 +130,7 @@ export function createStation({ tools, binEls, onAction, onNoop, onBin, onCantEm
     holder.style.transform = `translate(${dx}px, ${dy}px) scale(.8)`;
     holder.classList.add('is-docked');
     docked = true;
-    if (fromDrag && state.liquid) say('Over the sink. Now turn it with ↻ to pour.');
+    if (fromDrag) say('Over the sink. Turn it with ↻ to pour.');
   }
 
   function undock() {
@@ -120,7 +138,6 @@ export function createStation({ tools, binEls, onAction, onNoop, onBin, onCantEm
     holder.classList.remove('is-docked');
     docked = false;
   }
-
 
   /** Stop all gestures (after the item is binned). */
   function freeze() {

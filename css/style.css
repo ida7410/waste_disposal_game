@@ -189,8 +189,10 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 @keyframes twist { 50% { transform: rotate(-14deg) scaleX(.85); } }
 .neck-target {
   position: absolute; z-index: 11; transform: translate(-50%, -50%); border-radius: 50%;
-  border: 2px dashed var(--color-accent); opacity: .55; pointer-events: none;
+  border: 2px dashed var(--color-accent); opacity: 0; pointer-events: none;
 }
+/* The snap ring only appears once the player picks up the cap, so it doesn't hint at the step. */
+.item-holder:has(.cap.is-dragging) .neck-target { opacity: .55; }
 .neck-target.is-target { opacity: 1; background: rgb(52 80 122 / .12); }
 
 /* Fallback actions: short animation on the item. */
@@ -201,8 +203,6 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 @keyframes pulse { 50% { transform: scale(1.08); } }
 @keyframes shake { 20%, 60% { transform: translateX(-6px) rotate(-4deg); } 40%, 80% { transform: translateX(6px) rotate(4deg); } }
 
-.chips { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 28px; }
-.chip { font-size: .85rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--color-try-soft); color: var(--color-try); }
 .say { min-height: 1.4em; }
 .carry { font-size: .9rem; font-weight: 600; color: var(--color-accent); background: var(--color-accent-soft); padding: 4px 10px; border-radius: var(--radius-small); }
 .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }

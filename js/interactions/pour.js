@@ -12,13 +12,15 @@ const DRAIN_MS = 1500; // full to empty while pouring
 let ctx = null;
 
 /**
- * opts: { tiltEl, handleEl, sinkEl, isDocked(), onFill(fill), onSpill(), reducedMotion }
+ * opts: { tiltEl, handleEl, sinkEl, isDocked(), onFill(fill), onSpill(), onEmpty(), reducedMotion }
  * The interaction never changes state; it calls onDone() when the container is empty.
+ * It also runs for items with nothing in them (so the handle doesn't give the
+ * answer away): tipping those over the sink calls onEmpty() instead.
  */
 export function start(itemEl, state, onDone, opts) {
   stop();
-  if (state.liquid !== true) return;
-  ctx = { itemEl, onDone, ...opts, fill: 1, tilt: 0, turning: null, spillHinted: false, last: performance.now(), raf: 0 };
+  const fill = state.liquid === true ? 1 : 0;
+  ctx = { itemEl, onDone, ...opts, fill, tilt: 0, turning: null, spillHinted: false, emptyHinted: false, last: performance.now(), raf: 0 };
   const h = ctx.handleEl;
   h.addEventListener('pointerdown', onDown);
   h.addEventListener('pointermove', onMove);
@@ -105,15 +107,23 @@ function tick(now) {
   ctx.last = now;
   const tipped = Math.abs(ctx.tilt) >= THRESHOLD;
   const docked = ctx.isDocked();
-  const pouring = tipped && docked;
+  const hasLiquid = ctx.fill > 0;
+  const pouring = tipped && docked && hasLiquid;
 
   ctx.sinkEl?.classList.toggle('is-pouring', pouring);
-  ctx.itemEl.classList.toggle('is-spilling', tipped && !docked);
-  if (tipped && !docked && !ctx.spillHinted) {
+  ctx.itemEl.classList.toggle('is-spilling', tipped && !docked && hasLiquid);
+  if (tipped && !docked && hasLiquid && !ctx.spillHinted) {
     ctx.spillHinted = true;
     ctx.onSpill?.();
   }
-  if (!tipped) ctx.spillHinted = false;
+  if (tipped && !hasLiquid && !ctx.emptyHinted) {
+    ctx.emptyHinted = true;
+    ctx.onEmpty?.();
+  }
+  if (!tipped) {
+    ctx.spillHinted = false;
+    ctx.emptyHinted = false;
+  }
 
   if (pouring) {
     ctx.fill = Math.max(0, ctx.fill - dt / DRAIN_MS);

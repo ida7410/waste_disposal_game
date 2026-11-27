@@ -75,23 +75,31 @@ test('scorePrep: right bin and ready is correct', () => {
   assert.equal(r.reason, bottle.reason);
 });
 
-test('scorePrep: full container in its (recycling) bin splashes', () => {
+test('scorePrep: full container in its (recycling) bin splashes and loses its full mark', () => {
   const bottle = byId('water-bottle');
   const r = scorePrep(bottle, createItemState(bottle), bottle.bin);
   assert.equal(r.outcome, 'contaminated');
   assert.equal(r.splash, true);
-  assert.equal(r.points, POINTS.contamination);
+  assert.equal(r.points, 0);
   assert.deepEqual(r.contaminants, ['liquid']);
 });
 
-test('scorePrep: emptied but lid off is partial', () => {
+test('scorePrep: emptied but lid off loses its full mark', () => {
   const bottle = byId('water-bottle');
   const s = applyAction(createItemState(bottle), 'pour').state;
   const r = scorePrep(bottle, s, bottle.bin);
   assert.equal(r.outcome, 'partial');
-  assert.equal(r.points, POINTS.partial);
+  assert.equal(r.points, 0);
   assert.deepEqual(r.pending, ['lid']);
   assert.equal(r.correct, false);
+});
+
+test('scorePrep: untaped batteries in the right bin get no marks', () => {
+  const aa = byId('aa-batteries');
+  const r = scorePrep(aa, createItemState(aa), aa.bin);
+  assert.equal(r.points, POINTS.missedStep);
+  assert.equal(r.splash, false);
+  assert.deepEqual(r.pending, ['tape']);
 });
 
 test('scorePrep: wrong bin, and giving up', () => {
