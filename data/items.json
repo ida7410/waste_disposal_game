@@ -41,7 +41,7 @@
     {
       "step": 2,
       "id": "alcohol",
-      "question": "Is it an alcohol bottle or can?",
+      "question": "Is it a container for alcohol?",
       "exitOn": "yes",
       "exitTo": "deposit"
     },
