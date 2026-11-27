@@ -144,11 +144,9 @@ export function contaminationText(binLabel) {
   return `Leftovers in the ${binLabel} soak paper and cardboard, and can spoil a whole load.`;
 }
 
-/** lidHalfOn: the cap was dropped on but not twisted, so say exactly what was missing. */
-export function nextTimeSentence(pending = [], { lidHalfOn = false } = {}) {
+export function nextTimeSentence(pending = []) {
   if (!pending.length) return '';
-  const phrase = (a) => (a === 'lid' && lidHalfOn ? 'twist the lid on until it’s tight' : actionPhrase(a));
-  return `Next time: ${pending.map(phrase).join(', ')}.`;
+  return `Next time: ${pending.map(actionPhrase).join(', ')}.`;
 }
 
 export function summaryHeading(accuracy) {

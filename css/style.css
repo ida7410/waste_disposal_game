@@ -194,7 +194,7 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 }
 @keyframes drip { from { transform: translateY(0); opacity: 1; } to { transform: translateY(24px); opacity: .2; } }
 
-/* Lid: loose cap, snap ring, twist progress ring. Positioned by its centre. */
+/* Lid: loose cap and snap ring. Positioned by its centre. */
 .cap {
   position: absolute; z-index: 13; width: 44px; height: 44px; margin: -22px 0 0 -22px;
   display: grid; place-items: center; border-radius: 50%;
@@ -203,20 +203,8 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .cap.is-loose { left: 92%; top: 96%; background: var(--color-accent-soft); }
 .cap.is-dragging { transition: none; }
 .cap svg { display: block; pointer-events: none; }
-/* On the neck but not twisted: crooked and raised, with a ring that fills as you twist. */
-.cap.on-neck {
-  background: conic-gradient(var(--color-accent) calc(var(--twist, 0) * 1turn), rgb(52 80 122 / .14) 0);
-  cursor: grab; touch-action: none;
-}
-.cap.needs-twist svg { transform: translateY(-5px) rotate(-14deg); transition: transform .2s ease; }
-.twist-badge {
-  position: absolute; top: -12px; right: -14px; width: 24px; height: 24px; border-radius: 50%;
-  display: grid; place-items: center; font-size: .95rem; font-weight: 700; pointer-events: none;
-  background: var(--color-accent); color: var(--color-accent-text); animation: nudge 1.2s ease-in-out infinite;
-}
-@keyframes nudge { 50% { transform: rotate(40deg) scale(1.1); } }
-.cap.is-twisting svg { animation: twist .35s ease-in-out 2; }
-@keyframes twist { 50% { transform: rotate(-14deg) scaleX(.85); } }
+/* Snapping on: the cap slides to the neck, then the item is redrawn with its lid. */
+.cap.on-neck { background: transparent; pointer-events: none; }
 .neck-target {
   position: absolute; z-index: 11; transform: translate(-50%, -50%); border-radius: 50%;
   border: 2px dashed var(--color-accent); opacity: 0; pointer-events: none;

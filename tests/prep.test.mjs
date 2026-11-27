@@ -159,7 +159,5 @@ test('prep copy', () => {
   assert.deepEqual(stateChips({ lid: true }), []);
   assert.ok(prepHeading('wrong', 'Green Bin').includes('Green Bin'));
   assert.ok(!/wrong/i.test(prepHeading('wrong', 'Green Bin')));
-  assert.equal(nextTimeSentence(['lid']), 'Next time: put the lid on.');
-  assert.equal(nextTimeSentence(['lid'], { lidHalfOn: true }), 'Next time: twist the lid on until it’s tight.');
-  assert.equal(toolLabel('pour'), 'Pour out');
+  assert.equal(nextTimeSentence(['lid']), 'Next time: put the lid on.');  assert.equal(toolLabel('pour'), 'Pour out');
 });

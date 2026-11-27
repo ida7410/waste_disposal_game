@@ -80,7 +80,7 @@ All interactions use **Pointer Events** (one code path for touch + mouse) and ea
 
 ### 5.2 Lid — Priority 1
 - A loose cap appears near the bottle.
-- Player drags the cap onto the bottle neck (snap within ~24 px), then does a circular swipe (or taps "Twist") to screw it on.
+- Player drags the cap onto the bottle neck. It snaps on within ~24 px, and that's the lid on (no separate twist step: a placed-but-untwisted cap looked finished and confused players).
 - State `lid` becomes `true`.
 - Ontario rule shown in feedback: **keep lids on**.
 

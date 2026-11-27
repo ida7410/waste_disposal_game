@@ -98,8 +98,6 @@ export function createStation({ tools, binEls, scrapsBin, onAction, onNoop, onBi
       lid.start(holder, state, () => finished('lid'), {
         cap: art.cap, capSvg: art.capSvg, reducedMotion: rm,
         isBlocked: () => blockedReason(state, 'lid'), onBlocked: () => say(EMPTY_FIRST),
-        onSnap: () => say('Now twist it on: circle the cap, or press “Lid on”.'),
-        onTwistHint: () => say('Circle your finger around the cap to twist it on.'),
       });
     }
   }
@@ -182,8 +180,5 @@ export function createStation({ tools, binEls, scrapsBin, onAction, onNoop, onBi
     drag.stop();
   }
 
-  /** Cap dropped on the neck but not twisted yet (read before freeze()). */
-  const lidHalfOn = () => lid.isSnappedNotTwisted();
-
-  return { rootEl, toolsEl, show, render, freeze, destroy, lidHalfOn };
+  return { rootEl, toolsEl, show, render, freeze, destroy };
 }
