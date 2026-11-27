@@ -30,12 +30,13 @@ const CONTAINERS = {
   jar: {
     body: 'M34 40a10 10 0 0 1 10-10h32a10 10 0 0 1 10 10v54a10 10 0 0 1-10 10H44a10 10 0 0 1-10-10z',
     cap: [42, 18, 36, 12], capFill: '#8a96a3',
-    food: '<path d="M38 80c8-8 14 2 22-4s16 2 22-2v20H38z" fill="#c0392b"/><circle cx="50" cy="58" r="5" fill="#c0392b"/><circle cx="70" cy="66" r="4" fill="#c0392b"/>',
+    // [cx, cy, r, colour] - each blob is scraped off on its own.
+    food: [[47, 88, 9, '#c0392b'], [64, 92, 9, '#c0392b'], [78, 86, 7, '#c0392b'], [50, 62, 5, '#c0392b'], [70, 68, 5, '#c0392b']],
   },
   tray: {
     body: 'M18 60h84l-10 34H28z',
     under: `<path d="M22 60l12-28h52l12 28" fill="#ffffff" ${O}/>`,
-    food: '<circle cx="44" cy="70" r="7" fill="#c76b2e"/><circle cx="64" cy="76" r="6" fill="#c76b2e"/><circle cx="80" cy="68" r="5" fill="#e0a030"/>',
+    food: [[44, 72, 8, '#c76b2e'], [64, 78, 7, '#c76b2e'], [80, 70, 6, '#e0a030']],
   },
 };
 
@@ -48,6 +49,9 @@ const LABELS = {
   'compostable-cup': `<rect x="36" y="78" width="48" height="16" rx="4" fill="#fff" ${O}/><text x="60" y="90" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,sans-serif" fill="#2e7d32">COMPOSTABLE</text>`,
   'spray-paint': `<path d="M60 70l14 14-14 14-14-14z" fill="#fff" stroke="#c0392b" stroke-width="3"/><path d="M60 77c4 4 5 8 1 13-1-4-4-4-4-8 0 4-3 5-3 8-2-5 2-10 6-13z" fill="#c0392b"/>`,
 };
+
+// Smudges for state.dirty (any item).
+const DIRT = '<g class="dirt" fill="#8a6a3f" opacity=".75"><ellipse cx="48" cy="70" rx="7" ry="4"/><ellipse cx="70" cy="84" rx="6" ry="3.5"/><ellipse cx="62" cy="58" rx="4" ry="2.5"/></g>';
 
 let uid = 0;
 
@@ -73,7 +77,10 @@ export function drawPrepItem(item, state, fill = state.liquid ? 1 : 0) {
     const y = bottom - fill * (bottom - top);
     parts.push(`<rect class="liquid" clip-path="url(#${id})" x="0" y="${y}" width="120" height="${bottom - y}" data-top="${top}" data-bottom="${bottom}" fill="${LIQUID[item.id] ?? '#4ea3ea'}" opacity=".9"/>`);
   }
-  if (c.food && state.food) parts.push(`<g clip-path="url(#${id})">${c.food}</g>`);
+  if (c.food && state.food) {
+    const blobs = c.food.map(([cx, cy, r, fill], i) => `<circle class="blob" data-i="${i}" cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"/>`);
+    parts.push(`<g clip-path="url(#${id})">${blobs.join('')}</g>`);
+  }
   parts.push(`<path d="${c.body}" fill="none" ${O}/>`, c.over ?? '');
   if (c.cap && state.lid !== false) {
     const [x, y, w, h] = c.cap;
@@ -86,7 +93,8 @@ export function drawPrepItem(item, state, fill = state.liquid ? 1 : 0) {
 
 function withOverlays(item, state, svg, shape) {
   const extra = (TAPE[shape] && state.terminals === false ? TAPE[shape] : '')
-    + (LABELS[item.id] && state.labelRead ? LABELS[item.id] : '');
+    + (LABELS[item.id] && state.labelRead ? LABELS[item.id] : '')
+    + (state.dirty ? DIRT : '');
   return extra ? svg.replace('</svg>', `${extra}</svg>`) : svg;
 }
 

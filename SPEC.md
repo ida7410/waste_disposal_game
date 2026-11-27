@@ -116,7 +116,7 @@ All game content comes from `data/items.json`. **No disposal rule may be hard-co
 
 Key fields (see file for full schema):
 - `bins[]`: `id`, `label`, `color`.
-- `flow[]`: ordered yes/no questions; `exitOn` ("yes"/"no") and `exitTo` (bin id) or `action` (for the empty/rinse step). The `action` step may set optional `cantEmptyTo` (bin id): where an item goes if the player can't empty it now (Prep & Sort's "Can't empty it now → Garbage"). If it's missing, only "Carry it" is offered.
+- `flow[]`: ordered yes/no questions; `exitOn` ("yes"/"no") and `exitTo` (bin id) or `action` (for the empty/rinse step). The `action` step may set optional `cantEmptyTo` (bin id): where an item goes if the player can't empty it now (Prep & Sort's "Can't empty it now → Garbage"). If it's missing, only "Carry it" is offered. It may also set optional `scrapsTo` (bin id): where scraped-out food goes (the scrape gesture flicks scraps there). If it's missing, scraps just disappear.
 - `actions[]`: allowed action ids.
 - `items[]`: `id`, `name`, `level`, `bin`, `exitStep`, `reason`, `start` (state flags), `steps` (ordered action ids), optional `note`, `altBin`.
 

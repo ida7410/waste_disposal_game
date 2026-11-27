@@ -19,7 +19,9 @@ const HINT = 'Get it ready, then drag it into a bin (or tap a bin).';
 
 export function startPrepSort(root, { data, items, level, title, tools, practice = false, onExit, onFinish }) {
   const bins = data.bins;
-  const cantEmptyTo = data.flow.find((f) => f.action && f.cantEmptyTo)?.cantEmptyTo ?? null;
+  const prepStep = data.flow.find((f) => f.action);
+  const cantEmptyTo = prepStep?.cantEmptyTo ?? null;
+  const scrapsTo = prepStep?.scrapsTo ?? null;
   const binLabel = (id) => bins.find((b) => b.id === id)?.label ?? id;
   const exitNote = (item) => data.flow.find((f) => f.step === item.exitStep)?.note ?? '';
 
@@ -51,7 +53,7 @@ export function startPrepSort(root, { data, items, level, title, tools, practice
   }, el('span', { class: 'bin-icon', html: binIconSvg(b.id) }), el('span', { class: 'bin-label' }, b.label)));
 
   const station = createStation({
-    tools, binEls, onAction, onBin: (id) => choose(id), onCantEmpty: openCantPanel, say,
+    tools, binEls, scrapsBin: scrapsTo, onAction, onBin: (id) => choose(id), onCantEmpty: openCantPanel, say,
     onNoop: () => used.set(item.id, (used.get(item.id) ?? 0) + 1),
   });
 
@@ -114,7 +116,8 @@ export function startPrepSort(root, { data, items, level, title, tools, practice
     states.set(item.id, state);
     used.set(item.id, (used.get(item.id) ?? 0) + 1);
     const note = action === 'lid' ? exitNote(item) : '';
-    say(note ? `${actionDoneText(action)} ${note}` : actionDoneText(action));
+    const done = actionDoneText(action, { scrapsLabel: scrapsTo ? binLabel(scrapsTo) : null });
+    say(note ? `${done} ${note}` : done);
     station.render(state);
   }
 

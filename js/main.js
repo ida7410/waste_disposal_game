@@ -1,10 +1,12 @@
 // Boot and routing between screens.
 import { loadGameData, resolveDataUrl } from './data.js';
 import { itemsForLevel } from './round.js';
-import { bestAccuracy, recordLevel } from './progress.js';
+import { bestAccuracy, recordLevel, isUnlocked, UNLOCK_ACCURACY } from './progress.js';
 import { MODES, renderHome, renderLevels, renderSummary, renderError } from './screens.js';
+import { percent } from './text.js';
 import { startQuickSort } from './modes/quick-sort.js';
 import { startPrepSort } from './modes/prep-sort.js';
+import { startAskQuestions } from './modes/ask-questions.js';
 
 const root = document.getElementById('app');
 let data = null;
@@ -47,21 +49,47 @@ function toolsForLevel(level) {
   return data.actions.filter((a) => levelItems.some((it) => it.steps.includes(a)));
 }
 
+function levelOrder() {
+  return data.levels.map((l) => l.level);
+}
+
 function showLevels(mode) {
   leaveMode();
-  const levels = data.levels.map((l) => ({
+  const order = levelOrder();
+  const levels = data.levels.map((l, i) => ({
     level: l.level,
     name: l.name,
     count: itemsForLevel(data.items, l.level).length,
     best: bestAccuracy(mode, l.level),
+    unlocked: isUnlocked(mode, l.level, order),
+    lockHint: i > 0 ? `Get ${percent(UNLOCK_ACCURACY)} on Level ${order[i - 1]} to unlock.` : '',
   }));
   const modeName = MODES.find((m) => m.id === mode)?.name ?? '';
   renderLevels(root, { modeName, levels, onPick: (level) => play(mode, level), onBack: showHome });
 }
 
+/** After a level: did it just unlock the next one, or what's still needed? */
+function unlockNoteFor(mode, level, wasUnlocked) {
+  const order = levelOrder();
+  const nextLevel = order[order.indexOf(level) + 1];
+  if (nextLevel === undefined) return null;
+  if (isUnlocked(mode, nextLevel, order)) {
+    return wasUnlocked ? null : { unlocked: true, text: `🔓 Level ${nextLevel}: ${levelName(nextLevel)} is unlocked!` };
+  }
+  return { unlocked: false, text: `Get ${percent(UNLOCK_ACCURACY)} to unlock Level ${nextLevel}.` };
+}
+
+const STARTERS = {
+  'quick-sort': (options) => startQuickSort(root, { ...options, bins: data.bins }),
+  'prep-sort': (options) => startPrepSort(root, { ...options, data, tools: toolsForLevel(options.level) }),
+  'ask-questions': (options) => startAskQuestions(root, { ...options, data }),
+};
+
 function play(mode, level, items = itemsForLevel(data.items, level), practice = false) {
   leaveMode();
   const title = `Level ${level}: ${levelName(level)}`;
+  const order = levelOrder();
+  const nextLevel = order[order.indexOf(level) + 1];
   const options = {
     items,
     level,
@@ -70,20 +98,20 @@ function play(mode, level, items = itemsForLevel(data.items, level), practice = 
     onExit: () => showLevels(mode),
     onFinish: (summary) => {
       active = null;
+      const wasUnlocked = nextLevel === undefined || isUnlocked(mode, nextLevel, order);
       if (!practice) recordLevel(mode, level, summary.accuracy);
       renderSummary(root, {
         summary,
         title,
         binLabel,
+        unlockNote: practice ? null : unlockNoteFor(mode, level, wasUnlocked),
         onPractice: () => play(mode, level, summary.missed, true),
         onReplay: () => play(mode, level),
         onLevels: () => showLevels(mode),
       });
     },
   };
-  active = mode === 'prep-sort'
-    ? startPrepSort(root, { ...options, data, tools: toolsForLevel(level) })
-    : startQuickSort(root, { ...options, bins: data.bins });
+  active = (STARTERS[mode] ?? STARTERS['quick-sort'])(options);
 }
 
 boot();

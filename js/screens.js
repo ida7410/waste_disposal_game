@@ -5,7 +5,7 @@ import { percent, summaryHeading } from './text.js';
 export const MODES = [
   { id: 'quick-sort', name: 'Quick Sort', blurb: 'Pick the right bin for each item.', ready: true },
   { id: 'prep-sort', name: 'Prep & Sort', blurb: 'Pour it out, put the lid on, then sort.', ready: true },
-  { id: 'ask-questions', name: 'Ask the Questions', blurb: 'Learn the questions that sort anything.', ready: false },
+  { id: 'ask-questions', name: 'Ask the Questions', blurb: 'Learn the questions that sort anything.', ready: true },
 ];
 
 export function renderHome(root, { onMode }) {
@@ -27,24 +27,29 @@ export function renderLevels(root, { modeName, levels, onPick, onBack }) {
     el('header', { class: 'topbar' },
       el('button', { class: 'btn btn-ghost', type: 'button', onclick: onBack }, '‹ Home'),
       el('h1', { class: 'topbar-title', tabindex: '-1', 'data-autofocus': true }, `${modeName}: choose a level`)),
-    el('ul', { class: 'card-list', role: 'list' }, levels.map((l) => el('li', {},
-      el('button', {
-        class: 'card', type: 'button', disabled: l.count === 0,
-        onclick: l.count ? () => onPick(l.level) : null,
-      },
-      el('span', { class: 'card-kicker' }, `Level ${l.level}`),
-      el('span', { class: 'card-title' }, l.name),
-      el('span', { class: 'card-sub' },
-        `${l.count} items`, l.best != null ? ` · Best ${percent(l.best)}` : '')))))));
+    el('ul', { class: 'card-list', role: 'list' }, levels.map((l) => {
+      const open = l.unlocked && l.count > 0;
+      return el('li', {},
+        el('button', {
+          class: `card${l.unlocked ? '' : ' is-locked'}`, type: 'button', disabled: !open,
+          onclick: open ? () => onPick(l.level) : null,
+        },
+        el('span', { class: 'card-kicker' }, l.unlocked ? `Level ${l.level}` : `🔒 Level ${l.level} · Locked`),
+        el('span', { class: 'card-title' }, l.name),
+        el('span', { class: 'card-sub' }, l.unlocked
+          ? [`${l.count} items`, l.best == null ? '' : ` · Best ${percent(l.best)}`]
+          : l.lockHint)));
+    }))));
 }
 
-export function renderSummary(root, { summary, title, binLabel, onPractice, onReplay, onLevels }) {
+export function renderSummary(root, { summary, title, binLabel, unlockNote, onPractice, onReplay, onLevels }) {
   const { correct, total, accuracy, score, missed, practice } = summary;
   mount(root, el('div', { class: 'screen menu' },
     el('header', { class: 'hero' },
       el('p', { class: 'card-kicker' }, practice ? `${title}: practice` : title),
       el('h1', { class: 'hero-title', tabindex: '-1', 'data-autofocus': true }, summaryHeading(accuracy)),
-      el('p', { class: 'hero-sub' }, `You sorted ${correct} of ${total} right (${percent(accuracy)}). Score: ${score}.`)),
+      el('p', { class: 'hero-sub' }, `You sorted ${correct} of ${total} right (${percent(accuracy)}). Score: ${score}.`),
+      unlockNote ? el('p', { class: `unlock-note${unlockNote.unlocked ? ' is-unlocked' : ''}` }, unlockNote.text) : null),
     missed.length
       ? el('section', { class: 'missed' },
         el('h2', {}, 'Worth another look'),
