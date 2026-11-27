@@ -143,6 +143,85 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
   background: var(--color-good); color: #fff; font-size: .9rem;
 }
 
+/* ---- Prep & Sort ---- */
+.prep { gap: 10px; }
+.prep .stage { justify-content: flex-start; gap: 6px; }
+.station { width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 0; }
+.bench { width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 12px; }
+.station.has-sink .bench { justify-content: space-between; padding-inline: 4%; }
+.item-holder {
+  position: relative; z-index: 10; flex: none;
+  width: min(40vw, 170px, 24vh); aspect-ratio: 1;
+  transition: transform .35s ease;
+}
+.item-holder .item { width: 100%; height: 100%; }
+.tilt { width: 100%; height: 100%; transition: transform .3s ease; transform-origin: 50% 55%; }
+.tilt.is-turning { transition: none; }
+.tilt svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+.tilt-handle {
+  position: absolute; top: -10px; right: -14px; z-index: 12; width: 44px; height: 44px;
+  display: grid; place-items: center; border-radius: 50%; font-size: 1.4rem; font-weight: 700;
+  background: var(--color-surface); color: var(--color-accent); border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow); touch-action: none; cursor: grab; user-select: none;
+}
+.sink { width: min(36vw, 160px); flex: none; }
+.sink svg { width: 100%; display: block; }
+.sink .stream { opacity: 0; transition: opacity .15s; }
+.sink.is-pouring .stream { opacity: .9; }
+.item-holder.is-spilling::after {
+  content: ""; position: absolute; left: 70%; top: 55%; width: 10px; height: 10px; border-radius: 50%;
+  background: #4ea3ea; box-shadow: 8px 18px 0 -1px #4ea3ea, -6px 34px 0 -2px #4ea3ea, 10px 50px 0 -2px #4ea3ea;
+  animation: drip .6s linear infinite;
+}
+@keyframes drip { from { transform: translateY(0); opacity: 1; } to { transform: translateY(24px); opacity: .2; } }
+
+/* Lid: loose cap, snap ring, twist progress ring. Positioned by its centre. */
+.cap {
+  position: absolute; z-index: 13; width: 44px; height: 44px; margin: -22px 0 0 -22px;
+  display: grid; place-items: center; border-radius: 50%;
+  transition: left .3s ease, top .3s ease;
+}
+.cap.is-loose { left: 92%; top: 96%; background: var(--color-accent-soft); }
+.cap.is-dragging { transition: none; }
+.cap svg { display: block; pointer-events: none; }
+.cap.on-neck { background: conic-gradient(var(--color-accent) calc(var(--twist, 0) * 1turn), transparent 0); cursor: grab; touch-action: none; }
+.cap.is-twisting svg { animation: twist .35s ease-in-out 2; }
+@keyframes twist { 50% { transform: rotate(-14deg) scaleX(.85); } }
+.neck-target {
+  position: absolute; z-index: 11; transform: translate(-50%, -50%); border-radius: 50%;
+  border: 2px dashed var(--color-accent); opacity: 0; pointer-events: none;
+}
+/* The snap ring only appears once the player picks up the cap, so it doesn't hint at the step. */
+.item-holder:has(.cap.is-dragging) .neck-target { opacity: .55; }
+.neck-target.is-target { opacity: 1; background: rgb(52 80 122 / .12); }
+
+/* Fallback actions: short animation on the item. */
+.fx-flip .tilt { animation: flip .7s ease; }
+.fx-tape .tilt, .fx-separate .tilt { animation: pulse .7s ease; }
+.fx-scrape .tilt, .fx-rinse .tilt { animation: shake .7s ease; }
+@keyframes flip { 50% { transform: rotateY(180deg); } }
+@keyframes pulse { 50% { transform: scale(1.08); } }
+@keyframes shake { 20%, 60% { transform: translateX(-6px) rotate(-4deg); } 40%, 80% { transform: translateX(6px) rotate(4deg); } }
+
+.say { min-height: 1.4em; }
+.carry { font-size: .9rem; font-weight: 600; color: var(--color-accent); background: var(--color-accent-soft); padding: 4px 10px; border-radius: var(--radius-small); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tool { padding-inline: 14px; }
+.tool-cant { color: var(--color-muted); text-decoration: underline; }
+.cant-panel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+.cant-panel p { width: 100%; text-align: center; font-weight: 600; }
+.result-art { width: min(28vw, 110px, 16vh); }
+.result-art svg { width: 100%; height: 100%; display: block; }
+.feedback-extra { color: var(--color-try); font-weight: 600; }
+
+/* Contamination splash on the bin */
+.splash { position: absolute; left: 50%; top: -34px; width: 56px; height: 56px; margin-left: -28px; z-index: 5; pointer-events: none; }
+.splash svg { width: 100%; height: 100%; }
+.splash .splash-drops { animation: burst .5s ease-out both; transform-origin: 30px 30px; }
+.splash .splash-stain { animation: stain .6s .15s ease-out both; transform-origin: 30px 32px; }
+@keyframes burst { from { transform: scale(.2); opacity: 0; } }
+@keyframes stain { from { transform: scale(0); } }
+
 @media (min-width: 600px) {
   .app { padding-top: 24px; }
   .bin { min-height: 108px; }

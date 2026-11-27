@@ -67,6 +67,7 @@
       "question": "Is it empty (and roughly rinsed)?",
       "exitOn": "no",
       "action": "prep",
+      "cantEmptyTo": "garbage",
       "note": "Empty it, then continue. If you can't empty it now, carry it or put it in Garbage."
     },
     {

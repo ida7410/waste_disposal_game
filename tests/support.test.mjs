@@ -16,26 +16,35 @@ const brokenStore = {
 
 test('progress keeps the best accuracy per level', () => {
   const store = memoryStore();
-  assert.equal(bestAccuracy(1, store), null);
-  recordLevel(1, 0.6, store);
-  recordLevel(1, 0.9, store);
-  recordLevel(1, 0.5, store);
-  recordLevel(2, 0.3, store);
-  assert.equal(bestAccuracy(1, store), 0.9);
-  assert.equal(bestAccuracy(2, store), 0.3);
+  assert.equal(bestAccuracy('quick-sort', 1, store), null);
+  recordLevel('quick-sort', 1, 0.6, store);
+  recordLevel('quick-sort', 1, 0.9, store);
+  recordLevel('quick-sort', 1, 0.5, store);
+  recordLevel('quick-sort', 2, 0.3, store);
+  assert.equal(bestAccuracy('quick-sort', 1, store), 0.9);
+  assert.equal(bestAccuracy('quick-sort', 2, store), 0.3);
+});
+
+test('progress is kept separately per mode', () => {
+  const store = memoryStore();
+  recordLevel('quick-sort', 1, 0.9, store);
+  recordLevel('prep-sort', 1, 0.4, store);
+  assert.equal(bestAccuracy('quick-sort', 1, store), 0.9);
+  assert.equal(bestAccuracy('prep-sort', 1, store), 0.4);
+  assert.equal(bestAccuracy('prep-sort', 2, store), null);
 });
 
 test('progress survives blocked, missing or corrupt storage', () => {
   assert.deepEqual(loadProgress(brokenStore), {});
-  assert.equal(recordLevel(1, 1, brokenStore), false);
-  assert.equal(bestAccuracy(1, null), null);
-  assert.equal(recordLevel(1, 1, null), true);
+  assert.equal(recordLevel('quick-sort', 1, 1, brokenStore), false);
+  assert.equal(bestAccuracy('quick-sort', 1, null), null);
+  assert.equal(recordLevel('quick-sort', 1, 1, null), true);
 
   const corrupt = memoryStore();
-  corrupt.setItem('sortright.progress.v1', '{oops');
+  corrupt.setItem('sortright.progress.v2', '{oops');
   assert.deepEqual(loadProgress(corrupt), {});
-  recordLevel(1, 0.7, corrupt);
-  assert.equal(bestAccuracy(1, corrupt), 0.7);
+  recordLevel('quick-sort', 1, 0.7, corrupt);
+  assert.equal(bestAccuracy('quick-sort', 1, corrupt), 0.7);
 });
 
 test('emit calls the host hook and never throws', () => {

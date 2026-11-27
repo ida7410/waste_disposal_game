@@ -52,7 +52,7 @@ People learn sorting rules in quizzes but still sort incorrectly at the real bin
 - The player must perform the item's `steps` (in any reasonable order unless the item says otherwise), then put it in the correct bin.
 - **Bins check state, not just item.** Dropping a still-full container in the Blue Bin triggers a splash animation that stains a paper item in the bin, plus an explanation of contamination.
 - **Not every item needs prep.** A clean, empty can should go straight in. Doing unnecessary steps costs a little time but is not "wrong".
-- **"Can't empty it now" button** for items with liquid or food: choices are "Carry it" (item moves to an inventory slot and comes back 2 items later) or "Garbage" (partial points). Blue Bin while full = lose points.
+- **"Can't empty it now" button** for items with liquid or food: choices are "Carry it" (item moves to an inventory slot and comes back 2 items later) or "Garbage" (partial points). Blue Bin while full = no points for that item (and a splash).
 
 ### 4.3 Ask the Questions (decision flow)
 - The player gets an item and answers the yes/no questions in `flow` in order.
@@ -94,8 +94,9 @@ All interactions use **Pointer Events** (one code path for touch + mouse) and ea
 
 ## 6. Scoring and feedback
 - +10 correct bin with correct state.
-- +5 partial (e.g. "Garbage" when it could not be emptied).
-- −5 contamination (full/dirty item in Blue Bin, or wrong bin).
+- 0 right bin but a prep step missed: the item loses its full mark. This includes a full/dirty item in the Blue Bin (which also splashes) and a lid left off or battery ends not taped.
+- +5 partial ("Garbage" when it could not be emptied).
+- −5 wrong bin.
 - Small time bonus in Prep & Sort for skipping unnecessary steps.
 - Every result shows the item's one-line `reason`. Feedback copy is short, friendly and never shaming.
 - End of level: accuracy, the items missed, and a "Practice missed items" button.
@@ -115,7 +116,7 @@ All game content comes from `data/items.json`. **No disposal rule may be hard-co
 
 Key fields (see file for full schema):
 - `bins[]`: `id`, `label`, `color`.
-- `flow[]`: ordered yes/no questions; `exitOn` ("yes"/"no") and `exitTo` (bin id) or `action` (for the empty/rinse step).
+- `flow[]`: ordered yes/no questions; `exitOn` ("yes"/"no") and `exitTo` (bin id) or `action` (for the empty/rinse step). The `action` step may set optional `cantEmptyTo` (bin id): where an item goes if the player can't empty it now (Prep & Sort's "Can't empty it now → Garbage"). If it's missing, only "Carry it" is offered.
 - `actions[]`: allowed action ids.
 - `items[]`: `id`, `name`, `level`, `bin`, `exitStep`, `reason`, `start` (state flags), `steps` (ordered action ids), optional `note`, `altBin`.
 

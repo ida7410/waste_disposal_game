@@ -2,8 +2,9 @@
 import { loadGameData, resolveDataUrl } from './data.js';
 import { itemsForLevel } from './round.js';
 import { bestAccuracy, recordLevel } from './progress.js';
-import { renderHome, renderLevels, renderSummary, renderError } from './screens.js';
+import { MODES, renderHome, renderLevels, renderSummary, renderError } from './screens.js';
 import { startQuickSort } from './modes/quick-sort.js';
+import { startPrepSort } from './modes/prep-sort.js';
 
 const root = document.getElementById('app');
 let data = null;
@@ -29,7 +30,7 @@ function leaveMode() {
 
 function showHome() {
   leaveMode();
-  renderHome(root, { onMode: (id) => { if (id === 'quick-sort') showLevels(); } });
+  renderHome(root, { onMode: showLevels });
 }
 
 function levelName(level) {
@@ -40,40 +41,49 @@ function binLabel(id) {
   return data.bins.find((b) => b.id === id)?.label ?? id;
 }
 
-function showLevels() {
+/** Tools for a level: every action any of its items needs, in the data's action order. */
+function toolsForLevel(level) {
+  const levelItems = itemsForLevel(data.items, level);
+  return data.actions.filter((a) => levelItems.some((it) => it.steps.includes(a)));
+}
+
+function showLevels(mode) {
   leaveMode();
   const levels = data.levels.map((l) => ({
     level: l.level,
     name: l.name,
     count: itemsForLevel(data.items, l.level).length,
-    best: bestAccuracy(l.level),
+    best: bestAccuracy(mode, l.level),
   }));
-  renderLevels(root, { levels, onPick: (level) => play(level), onBack: showHome });
+  const modeName = MODES.find((m) => m.id === mode)?.name ?? '';
+  renderLevels(root, { modeName, levels, onPick: (level) => play(mode, level), onBack: showHome });
 }
 
-function play(level, items = itemsForLevel(data.items, level), practice = false) {
+function play(mode, level, items = itemsForLevel(data.items, level), practice = false) {
   leaveMode();
   const title = `Level ${level}: ${levelName(level)}`;
-  active = startQuickSort(root, {
-    bins: data.bins,
+  const options = {
     items,
     level,
     title,
     practice,
-    onExit: showLevels,
+    onExit: () => showLevels(mode),
     onFinish: (summary) => {
       active = null;
-      if (!practice) recordLevel(level, summary.accuracy);
+      if (!practice) recordLevel(mode, level, summary.accuracy);
       renderSummary(root, {
         summary,
         title,
         binLabel,
-        onPractice: () => play(level, summary.missed, true),
-        onReplay: () => play(level),
-        onLevels: showLevels,
+        onPractice: () => play(mode, level, summary.missed, true),
+        onReplay: () => play(mode, level),
+        onLevels: () => showLevels(mode),
       });
     },
-  });
+  };
+  active = mode === 'prep-sort'
+    ? startPrepSort(root, { ...options, data, tools: toolsForLevel(level) })
+    : startQuickSort(root, { ...options, bins: data.bins });
 }
 
 boot();
