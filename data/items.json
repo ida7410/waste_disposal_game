@@ -429,7 +429,7 @@
     },
     {
       "id": "toothpaste-tube",
-      "name": "Toothpaste tube",
+      "name": "Empty toothpaste tube",
       "level": 2,
       "bin": "blue",
       "exitNode": "leaf-packaging-blue",
