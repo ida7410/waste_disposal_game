@@ -152,13 +152,14 @@ export function startPrepSort(root, { data, items, level, title, tools, practice
   function choose(binId, gaveUp = false) {
     if (answered || !binId || isDone(round)) return;
     answered = true;
+    const lidHalfOn = station.lidHalfOn();
     station.freeze();
     const ms = Math.round(performance.now() - shownAt);
     const r = { ...scorePrep(item, state, binId, { gaveUp, actionsUsed: used.get(item.id) ?? 0 }), ms };
     round = record(round, r).round;
     emit('item_result', { mode: MODE, level, itemId: r.itemId, correct: r.correct, bin: binId, ms, outcome: r.outcome });
     markBins(r, binId);
-    showFeedback(r);
+    showFeedback(r, lidHalfOn);
   }
 
   function markBins(r, binId) {
@@ -173,12 +174,12 @@ export function startPrepSort(root, { data, items, level, title, tools, practice
     }
   }
 
-  function showFeedback(r) {
+  function showFeedback(r, lidHalfOn = false) {
     const heading = prepHeading(r.outcome, binLabel(r.correctBin));
     let extra = '';
     if (r.splash) extra = contaminationText(binLabel(r.chosenBin));
     else if (r.outcome === 'gave-up') extra = cantEmptyLeaf?.note ?? '';
-    const prep = r.correct ? '' : nextTimeSentence(r.pending);
+    const prep = r.correct ? '' : nextTimeSentence(r.pending, { lidHalfOn });
     fbTitle.textContent = `${r.correct ? '✓' : '↻'} ${heading}`;
     fbReason.textContent = r.reason;
     fbExtra.textContent = extra;

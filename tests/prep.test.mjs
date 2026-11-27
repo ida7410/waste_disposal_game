@@ -160,5 +160,6 @@ test('prep copy', () => {
   assert.ok(prepHeading('wrong', 'Green Bin').includes('Green Bin'));
   assert.ok(!/wrong/i.test(prepHeading('wrong', 'Green Bin')));
   assert.equal(nextTimeSentence(['lid']), 'Next time: put the lid on.');
+  assert.equal(nextTimeSentence(['lid'], { lidHalfOn: true }), 'Next time: twist the lid on until it’s tight.');
   assert.equal(toolLabel('pour'), 'Pour out');
 });

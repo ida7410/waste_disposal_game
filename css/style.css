@@ -203,7 +203,18 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .cap.is-loose { left: 92%; top: 96%; background: var(--color-accent-soft); }
 .cap.is-dragging { transition: none; }
 .cap svg { display: block; pointer-events: none; }
-.cap.on-neck { background: conic-gradient(var(--color-accent) calc(var(--twist, 0) * 1turn), transparent 0); cursor: grab; touch-action: none; }
+/* On the neck but not twisted: crooked and raised, with a ring that fills as you twist. */
+.cap.on-neck {
+  background: conic-gradient(var(--color-accent) calc(var(--twist, 0) * 1turn), rgb(52 80 122 / .14) 0);
+  cursor: grab; touch-action: none;
+}
+.cap.needs-twist svg { transform: translateY(-5px) rotate(-14deg); transition: transform .2s ease; }
+.twist-badge {
+  position: absolute; top: -12px; right: -14px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; font-size: .95rem; font-weight: 700; pointer-events: none;
+  background: var(--color-accent); color: var(--color-accent-text); animation: nudge 1.2s ease-in-out infinite;
+}
+@keyframes nudge { 50% { transform: rotate(40deg) scale(1.1); } }
 .cap.is-twisting svg { animation: twist .35s ease-in-out 2; }
 @keyframes twist { 50% { transform: rotate(-14deg) scaleX(.85); } }
 .neck-target {

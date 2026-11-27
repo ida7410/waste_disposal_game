@@ -144,9 +144,11 @@ export function contaminationText(binLabel) {
   return `Leftovers in the ${binLabel} soak paper and cardboard, and can spoil a whole load.`;
 }
 
-export function nextTimeSentence(pending = []) {
+/** lidHalfOn: the cap was dropped on but not twisted, so say exactly what was missing. */
+export function nextTimeSentence(pending = [], { lidHalfOn = false } = {}) {
   if (!pending.length) return '';
-  return `Next time: ${pending.map(actionPhrase).join(', ')}.`;
+  const phrase = (a) => (a === 'lid' && lidHalfOn ? 'twist the lid on until it’s tight' : actionPhrase(a));
+  return `Next time: ${pending.map(phrase).join(', ')}.`;
 }
 
 export function summaryHeading(accuracy) {

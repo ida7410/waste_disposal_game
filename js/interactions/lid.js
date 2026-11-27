@@ -9,7 +9,7 @@ const SNAP_PX = 24;
 let ctx = null;
 
 /**
- * opts: { cap: [x, y, w, h] on the 120 canvas, capSvg, isBlocked(), onBlocked(), onSnap(), reducedMotion }
+ * opts: { cap: [x, y, w, h] on the 120 canvas, capSvg, isBlocked(), onBlocked(), onSnap(), onTwistHint(), reducedMotion }
  * itemEl is the element the cap is positioned in (same box as the drawing).
  */
 export function start(itemEl, state, onDone, opts) {
@@ -86,7 +86,12 @@ function snap() {
   ctx.target.remove();
   const c = ctx.capEl;
   c.classList.remove('is-loose', 'draggable');
-  c.classList.add('on-neck');
+  // Sits crooked with a ↻ badge until it's twisted, so it never looks finished.
+  c.classList.add('on-neck', 'needs-twist');
+  const badge = document.createElement('span');
+  badge.className = 'twist-badge';
+  badge.textContent = '↻';
+  c.append(badge);
   Object.assign(c.style, ctx.neck);
   c.addEventListener('pointerdown', onDown);
   c.addEventListener('pointermove', onMove);
@@ -121,5 +126,13 @@ function onMove(e) {
 }
 
 function onUp(e) {
-  if (ctx?.twist?.id === e.pointerId) ctx.twist = null;
+  if (ctx?.twist?.id !== e.pointerId) return;
+  ctx.twist = null;
+  // A tap or a short wiggle: explain the gesture.
+  if (ctx.turned < 60) ctx.onTwistHint?.();
+}
+
+/** True once the cap is on the neck but not yet twisted (for feedback). */
+export function isSnappedNotTwisted() {
+  return Boolean(ctx?.snapped);
 }
