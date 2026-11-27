@@ -40,13 +40,13 @@ test('broken bins or flow are fatal', () => {
   dupBin.bins.push({ ...dupBin.bins[0] });
   assert.equal(validateData(dupBin).fatal, true);
 
-  const badFlow = clone();
-  badFlow.flow[1].step = 5;
-  assert.equal(validateData(badFlow).fatal, true);
+  const badTarget = clone();
+  badTarget.flowNodes.find((n) => n.id === 'q-hazard').options[0].next = 'q-moon';
+  assert.equal(validateData(badTarget).fatal, true);
 
-  const unknownExit = clone();
-  unknownExit.flow[0].exitTo = 'moon';
-  assert.equal(validateData(unknownExit).fatal, true);
+  const unknownLeafBin = clone();
+  unknownLeafBin.flowNodes.find((n) => n.id === 'leaf-special').bin = 'moon';
+  assert.equal(validateData(unknownLeafBin).fatal, true);
 });
 
 test('item rules: each one is caught and the item skipped', () => {
@@ -61,10 +61,9 @@ test('item rules: each one is caught and the item skipped', () => {
   expectItemError((d) => { item(d, 'pop-can').start.liquid = 'yes'; return 'pop-can'; }, 'must be true or false');
   expectItemError((d) => { item(d, 'pop-can').steps = []; return 'pop-can'; }, 'starts with liquid but has no "pour"');
   expectItemError((d) => { item(d, 'cereal-box').steps = ['lid']; return 'cereal-box'; }, 'step "lid" doesn\'t match');
-  expectItemError((d) => { item(d, 'pop-can').exitStep = 99; return 'pop-can'; }, 'is not a flow step');
-  expectItemError((d) => { item(d, 'pop-can').exitStep = 5; return 'pop-can'; }, 'is not an exit');
-  expectItemError((d) => { item(d, 'pop-can').exitStep = 3; return 'pop-can'; }, 'leads to "green" but bin is "blue"');
-  expectItemError((d) => { delete item(d, 'chemical-paper-towel').exception; return 'chemical-paper-towel'; }, 'set "exception": true');
+  expectItemError((d) => { item(d, 'pop-can').exitNode = 'leaf-moon'; return 'pop-can'; }, 'is not a flow node');
+  expectItemError((d) => { item(d, 'pop-can').exitNode = 'q-empty'; return 'pop-can'; }, 'is a question, not a leaf');
+  expectItemError((d) => { item(d, 'pop-can').exitNode = 'leaf-organics-green'; return 'pop-can'; }, 'leads to "green" but bin is "blue"');
   expectItemError((d) => { item(d, 'pop-can').altBin = 'moon'; return 'pop-can'; }, 'unknown altBin');
   expectItemError((d) => { item(d, 'pop-can').steps = 'pour'; return 'pop-can'; }, 'steps must be an array');
 });

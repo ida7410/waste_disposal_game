@@ -1,6 +1,6 @@
 // Scrape (SPEC.md 5.3). Food residue is drawn as blobs inside the container.
 // Rub/swipe over them: each blob clears after enough swipe distance. When
-// all are gone the scraps are flicked into the scraps bin (flow.scrapsTo).
+// all are gone the scraps are flicked into the scraps bin (the prep node's scrapsTo).
 // auto() ("Scrape" button / keyboard) clears them one by one.
 
 const SCRUB_PX = 70; // swipe distance over a blob before it clears

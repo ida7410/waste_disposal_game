@@ -82,12 +82,34 @@ export function actionDoneText(action, { scrapsLabel } = {}) {
 
 // ---- Ask the Questions ----
 
-export function askHeading(correct, destinationLabel) {
-  return correct ? `Right! It goes to: ${destinationLabel}.` : `Good try. It goes to: ${destinationLabel}.`;
+/** outcome: 'correct' | 'exception' | 'gave-up' | 'missed' (js/flow.js). */
+export function askHeading(outcome, destinationLabel) {
+  if (outcome === 'correct') return `Right! It goes to: ${destinationLabel}.`;
+  if (outcome === 'exception') return `Good reasoning, but this one is an exception. It goes to: ${destinationLabel}.`;
+  if (outcome === 'gave-up') return 'Garbage is OK when you can’t empty it.';
+  return `Good try. It goes to: ${destinationLabel}.`;
 }
 
-export function missedQuestionText(stepNumber, question, expected) {
-  return `Question ${stepNumber} was the tricky one: “${question}” The answer is ${expected === 'yes' ? 'Yes' : 'No'}.`;
+/** "The tricky one was “What is it mostly?” For this item: Packaging." */
+export function missedQuestionText(question, expectedLabels) {
+  return `The tricky one was “${question}” For this item: ${expectedLabels.join(' or ')}.`;
+}
+
+/** What the item really holds, for a miss on "Is it empty?" (SPEC.md 4.3). */
+export function emptyFact(state) {
+  if (state.liquid === true && state.food === true) return 'It still has food and liquid in it.';
+  if (state.liquid === true) return 'It still has liquid in it.';
+  if (state.food === true) return 'It still has food in it.';
+  return 'It’s already empty.';
+}
+
+/** Shown after "Can you empty it now? Yes": the prep, from the item's state and the prep node. */
+export function prepDoneText(state, { liquidTo, scrapsLabel } = {}) {
+  const parts = [];
+  if (state.liquid === true) parts.push(liquidTo ? `Pour it into the ${liquidTo}.` : 'Pour it out.');
+  if (state.food === true) parts.push(scrapsLabel ? `Scrape the food into the ${scrapsLabel}.` : 'Scrape out the food.');
+  if (state.lid === false) parts.push('Then put the lid back on.');
+  return parts.join(' ');
 }
 
 export function yesNo(answer) {

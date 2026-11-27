@@ -13,17 +13,21 @@ import { emit } from '../events.js';
 import { binIconSvg } from '../art/bins.js';
 import { drawPrepItem, splashSvg } from '../art/prep-art.js';
 import { createStation } from './station.js';
+import { createFlow, nodeById } from '../flow.js';
 
 const MODE = 'prep-sort';
 const HINT = 'Get it ready, then drag it into a bin (or tap a bin).';
 
 export function startPrepSort(root, { data, items, level, title, tools, practice = false, onExit, onFinish }) {
   const bins = data.bins;
-  const prepStep = data.flow.find((f) => f.action);
-  const cantEmptyTo = prepStep?.cantEmptyTo ?? null;
-  const scrapsTo = prepStep?.scrapsTo ?? null;
+  // Both read from the prep node in flowNodes (SPEC.md 8). cantEmptyTo is a partial leaf.
+  const flow = createFlow(data);
+  const cantEmptyLeaf = nodeById(flow, flow.prepNode?.cantEmptyTo);
+  const cantEmptyTo = cantEmptyLeaf?.bin ?? null;
+  const scrapsTo = flow.prepNode?.scrapsTo ?? null;
   const binLabel = (id) => bins.find((b) => b.id === id)?.label ?? id;
-  const exitNote = (item) => data.flow.find((f) => f.step === item.exitStep)?.note ?? '';
+  // The note on the leaf the item ends at, e.g. "Keep lids on." for the Blue Bin.
+  const exitNote = (item) => nodeById(flow, item.exitNode)?.note ?? '';
 
   let round = createRound(items, { level, practice });
   const states = new Map(); // item id -> state (kept while an item is carried)
@@ -173,7 +177,7 @@ export function startPrepSort(root, { data, items, level, title, tools, practice
     const heading = prepHeading(r.outcome, binLabel(r.correctBin));
     let extra = '';
     if (r.splash) extra = contaminationText(binLabel(r.chosenBin));
-    else if (r.outcome === 'gave-up') extra = 'Empty it when you can, so it can be recycled.';
+    else if (r.outcome === 'gave-up') extra = cantEmptyLeaf?.note ?? '';
     const prep = r.correct ? '' : nextTimeSentence(r.pending);
     fbTitle.textContent = `${r.correct ? '✓' : '↻'} ${heading}`;
     fbReason.textContent = r.reason;

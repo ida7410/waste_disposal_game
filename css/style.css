@@ -264,6 +264,18 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .question-note { font-size: .9rem; color: var(--color-try); }
 .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 .answer { min-height: 56px; font-size: 1.15rem; }
+/* "What is it mostly?": one row per option, label + examples, number key on the left. */
+.answers.is-choice { grid-template-columns: 1fr; gap: 8px; }
+.answers.is-choice .answer {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center;
+  text-align: left; padding: 10px 14px; font-size: 1.05rem;
+}
+.answer-key {
+  grid-row: span 2; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%;
+  background: rgb(255 255 255 / .2); font-size: .9rem;
+}
+.answer-examples { grid-column: 2; font-size: .85rem; font-weight: 500; opacity: .9; }
+@media (min-width: 600px) { .answers.is-choice { grid-template-columns: 1fr 1fr; } }
 .dest { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
 
 /* Locked levels and unlock messages */
