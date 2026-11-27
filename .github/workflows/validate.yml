@@ -5,11 +5,13 @@ on:
     paths:
       - 'data/**'
       - 'scripts/validate.mjs'
+      - 'js/validate-core.js'
   push:
     branches: [main]
     paths:
       - 'data/**'
       - 'scripts/validate.mjs'
+      - 'js/validate-core.js'
 
 jobs:
   validate:

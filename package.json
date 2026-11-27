@@ -1,0 +1,6 @@
+{
+  "name": "sortright",
+  "private": true,
+  "description": "No dependencies and no build step. This file only tells Node that js/*.js are ES modules.",
+  "type": "module"
+}
