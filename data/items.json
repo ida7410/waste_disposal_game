@@ -1,8 +1,8 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "region": "Toronto, ON",
   "rulesCheckedOn": "2026-11-26",
-  "sourceNote": "All 40 items checked in the City of Toronto Waste Wizard on 2026-11-26 (chemical-soiled paper towel checked against the City's Green Bin page). Recycling is run by Circular Materials since Jan 1, 2026; re-check before a pilot.",
+  "sourceNote": "All 40 items checked in the City of Toronto Waste Wizard on 2026-11-26. Flow claims (tissues/paper towels and food-soiled paper plates to Green Bin; all light bulb types are household hazardous waste) checked the same day. Recycling is run by Circular Materials since Jan 1, 2026; re-check before a pilot.",
   "bins": [
     {
       "id": "blue",
@@ -30,61 +30,214 @@
       "color": "#7A4FB5"
     }
   ],
-  "flow": [
+  "flowStart": "q-hazard",
+  "flowNodes": [
     {
-      "step": 1,
-      "id": "hazard",
-      "question": "Is it dangerous or electronic? (battery, charger, paint, needle, propane, medication, flammable spray)",
-      "exitOn": "yes",
-      "exitTo": "special"
+      "id": "q-hazard",
+      "type": "question",
+      "question": "Is it a battery, electronic, or hazardous?",
+      "examples": "medicine, needle, paint, propane, any light bulb, a hazard symbol",
+      "options": [
+        {
+          "answer": "yes",
+          "label": "Yes",
+          "next": "leaf-special"
+        },
+        {
+          "answer": "no",
+          "label": "No",
+          "next": "q-alcohol"
+        }
+      ]
     },
     {
-      "step": 2,
-      "id": "alcohol",
+      "id": "q-alcohol",
+      "type": "question",
       "question": "Is it a container for alcohol?",
-      "exitOn": "yes",
-      "exitTo": "deposit"
+      "options": [
+        {
+          "answer": "yes",
+          "label": "Yes",
+          "next": "leaf-deposit"
+        },
+        {
+          "answer": "no",
+          "label": "No",
+          "next": "q-mostly"
+        }
+      ]
     },
     {
-      "step": 3,
-      "id": "organic",
-      "question": "Is it food, or paper soiled by food or the body (tissue, napkin, diaper, pet waste)?",
-      "exitOn": "yes",
-      "exitTo": "green",
-      "exception": "Paper soiled with cleaning chemicals or makeup goes in Garbage."
+      "id": "q-mostly",
+      "type": "choice",
+      "question": "What is it mostly?",
+      "options": [
+        {
+          "answer": "organics",
+          "label": "Food or organics",
+          "examples": "scraps, coffee grounds, diapers, pet waste",
+          "next": "leaf-organics-green"
+        },
+        {
+          "answer": "paper",
+          "label": "Paper or cardboard",
+          "examples": "not cups or cartons",
+          "next": "q-paper-tissue"
+        },
+        {
+          "answer": "packaging",
+          "label": "Packaging",
+          "examples": "bottle, can, jar, tub, tube, bag, wrapper, cup, carton, takeout container",
+          "next": "q-empty"
+        },
+        {
+          "answer": "other",
+          "label": "Something else",
+          "examples": "clothes, toys, dishes and drinking glasses, wood, wipes, masks, hair",
+          "next": "leaf-other-garbage"
+        }
+      ]
     },
     {
-      "step": 4,
-      "id": "packaging",
-      "question": "Is it packaging or paper (container, bottle, can, box, bag, wrapper)?",
-      "exitOn": "no",
-      "exitTo": "garbage",
-      "note": "Donate if still usable (clothes, toys)."
+      "id": "q-paper-tissue",
+      "type": "question",
+      "question": "Is it a tissue, napkin or paper towel?",
+      "options": [
+        {
+          "answer": "yes",
+          "label": "Yes",
+          "next": "q-tissue-chem"
+        },
+        {
+          "answer": "no",
+          "label": "No",
+          "next": "q-paper-dirty"
+        }
+      ]
     },
     {
-      "step": 5,
-      "id": "clean",
-      "question": "Is it empty (and roughly rinsed)?",
-      "exitOn": "no",
-      "action": "prep",
-      "cantEmptyTo": "garbage",
+      "id": "q-tissue-chem",
+      "type": "question",
+      "question": "Was it used with cleaning chemicals or makeup?",
+      "options": [
+        {
+          "answer": "yes",
+          "label": "Yes",
+          "next": "leaf-tissue-garbage"
+        },
+        {
+          "answer": "no",
+          "label": "No",
+          "next": "leaf-tissue-green"
+        }
+      ]
+    },
+    {
+      "id": "q-paper-dirty",
+      "type": "question",
+      "question": "Is it dirty from food?",
+      "examples": "greasy box, soiled plate",
+      "options": [
+        {
+          "answer": "yes",
+          "label": "Yes",
+          "next": "leaf-paper-green"
+        },
+        {
+          "answer": "no",
+          "label": "No",
+          "next": "leaf-paper-blue"
+        }
+      ]
+    },
+    {
+      "id": "q-empty",
+      "type": "prep",
+      "question": "Is it empty, with no food or liquid left?",
+      "prepQuestion": "Can you empty it now?",
+      "expectedPrepAnswer": "yes",
+      "liquidTo": "sink",
       "scrapsTo": "green",
-      "note": "Empty it, then continue. If you can't empty it now, carry it or put it in Garbage."
+      "ifReady": "q-compostable",
+      "cantEmptyTo": "leaf-cant-empty"
     },
     {
-      "step": 6,
-      "id": "excluded",
-      "question": "Is it a cup, cutlery or bag labelled compostable or biodegradable?",
-      "exitOn": "yes",
-      "exitTo": "garbage",
-      "note": "Toronto's Green Bin can't process these. Foam packing peanuts and black plastic now go in the Blue Bin."
+      "id": "q-compostable",
+      "type": "question",
+      "question": "Is it labelled \"compostable\" or \"biodegradable\"?",
+      "options": [
+        {
+          "answer": "yes",
+          "label": "Yes",
+          "next": "leaf-compostable-garbage"
+        },
+        {
+          "answer": "no",
+          "label": "No",
+          "next": "leaf-packaging-blue"
+        }
+      ]
     },
     {
-      "step": 7,
-      "id": "blue",
-      "question": "Everything else",
-      "exitTo": "blue",
+      "id": "leaf-special",
+      "type": "leaf",
+      "bin": "special"
+    },
+    {
+      "id": "leaf-deposit",
+      "type": "leaf",
+      "bin": "deposit"
+    },
+    {
+      "id": "leaf-organics-green",
+      "type": "leaf",
+      "bin": "green"
+    },
+    {
+      "id": "leaf-tissue-green",
+      "type": "leaf",
+      "bin": "green"
+    },
+    {
+      "id": "leaf-tissue-garbage",
+      "type": "leaf",
+      "bin": "garbage"
+    },
+    {
+      "id": "leaf-paper-green",
+      "type": "leaf",
+      "bin": "green",
+      "note": "If the plate or container is lined with wax or plastic (rip it slowly to check), it goes in the Garbage."
+    },
+    {
+      "id": "leaf-paper-blue",
+      "type": "leaf",
+      "bin": "blue"
+    },
+    {
+      "id": "leaf-cant-empty",
+      "type": "leaf",
+      "bin": "garbage",
+      "partial": true,
+      "note": "Carry it until you can empty it, or put it in the Garbage. Never put a full container in the Blue Bin."
+    },
+    {
+      "id": "leaf-compostable-garbage",
+      "type": "leaf",
+      "bin": "garbage",
+      "note": "Toronto's Green Bin can't process compostable cups, cutlery or bags."
+    },
+    {
+      "id": "leaf-packaging-blue",
+      "type": "leaf",
+      "bin": "blue",
       "note": "Keep lids on."
+    },
+    {
+      "id": "leaf-other-garbage",
+      "type": "leaf",
+      "bin": "garbage",
+      "note": "Donate it if it's still usable."
     }
   ],
   "actions": [
@@ -120,7 +273,7 @@
       "name": "Plastic water bottle",
       "level": 1,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Plastic bottles are recyclable. Empty it and keep the lid on.",
       "start": {
         "liquid": true,
@@ -137,7 +290,7 @@
       "name": "Aluminum pop can",
       "level": 1,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Metal cans are recyclable once empty.",
       "start": {
         "liquid": true
@@ -152,7 +305,7 @@
       "name": "Glass pasta sauce jar",
       "level": 1,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Glass jars and their metal lids are recyclable. Scrape out the sauce and put the lid back on.",
       "start": {
         "food": true,
@@ -169,7 +322,10 @@
       "name": "Cereal box",
       "level": 1,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-paper-blue",
+      "alsoExitNodes": [
+        "leaf-packaging-blue"
+      ],
       "reason": "Clean boxboard is recyclable.",
       "start": {},
       "steps": [],
@@ -180,7 +336,7 @@
       "name": "Milk carton",
       "level": 1,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Milk and juice cartons are accepted in the Blue Bin.",
       "start": {
         "liquid": true
@@ -195,7 +351,7 @@
       "name": "Flyers or newspaper",
       "level": 1,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-paper-blue",
       "reason": "Clean paper is recyclable.",
       "start": {},
       "steps": [],
@@ -206,7 +362,7 @@
       "name": "Banana peel",
       "level": 1,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Food scraps go in the Green Bin.",
       "start": {},
       "steps": [],
@@ -217,7 +373,7 @@
       "name": "Apple core",
       "level": 1,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Food scraps go in the Green Bin.",
       "start": {},
       "steps": [],
@@ -228,7 +384,7 @@
       "name": "Eggshells",
       "level": 1,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Eggs and eggshells are food waste.",
       "start": {},
       "steps": [],
@@ -239,7 +395,7 @@
       "name": "Chicken bones",
       "level": 1,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Meat and bones are accepted in Toronto's Green Bin.",
       "start": {},
       "steps": [],
@@ -250,7 +406,7 @@
       "name": "Paper coffee cup",
       "level": 2,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Toronto has accepted paper hot and cold drink cups in the Blue Bin since 2024. Pour out the coffee first.",
       "start": {
         "liquid": true
@@ -265,7 +421,7 @@
       "name": "Chip bag",
       "level": 2,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Chip bags and snack wrappers were added to Ontario's Blue Bin list in 2026.",
       "start": {},
       "steps": [],
@@ -273,10 +429,10 @@
     },
     {
       "id": "toothpaste-tube",
-      "name": "Toothpaste tube",
+      "name": "Empty toothpaste tube",
       "level": 2,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Toothpaste, deodorant and hand cream tubes are accepted as of 2026.",
       "start": {},
       "steps": [],
@@ -287,7 +443,7 @@
       "name": "Foam takeout container",
       "level": 2,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Foam food packaging is recyclable in Toronto. Scrape out the food first.",
       "start": {
         "food": true
@@ -302,7 +458,7 @@
       "name": "Plastic grocery bag",
       "level": 2,
       "bin": "blue",
-      "exitStep": 7,
+      "exitNode": "leaf-packaging-blue",
       "reason": "Soft, stretchy plastic bags go in Toronto's Blue Bin. Make sure it's empty.",
       "start": {},
       "steps": [],
@@ -313,7 +469,7 @@
       "name": "Used tissue",
       "level": 2,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-tissue-green",
       "reason": "Used tissues are dirty and their fibres are too short to recycle, but they break down as organics.",
       "start": {},
       "steps": [],
@@ -324,7 +480,7 @@
       "name": "Coffee grounds and tea bag",
       "level": 2,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Coffee grounds, filters and tea bags are organic.",
       "start": {},
       "steps": [],
@@ -335,7 +491,7 @@
       "name": "Diaper",
       "level": 2,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Toronto accepts diapers in the Green Bin because their organic parts can be recovered.",
       "start": {},
       "steps": [],
@@ -346,7 +502,7 @@
       "name": "Dog poop in a plastic bag",
       "level": 2,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-organics-green",
       "reason": "Pet waste goes in the Green Bin. Any plastic bag is fine.",
       "start": {},
       "steps": [],
@@ -357,7 +513,7 @@
       "name": "Greasy pizza box",
       "level": 2,
       "bin": "green",
-      "exitStep": 3,
+      "exitNode": "leaf-paper-green",
       "reason": "Grease ruins paper recycling, so a greasy box goes in the Green Bin. A clean box goes in the Blue Bin.",
       "start": {
         "parts": true
@@ -368,10 +524,10 @@
     },
     {
       "id": "compostable-cup",
-      "name": "Cup labelled \"compostable\"",
+      "name": "Cup with a label",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 6,
+      "exitNode": "leaf-compostable-garbage",
       "reason": "Toronto's Green Bin can't process compostable plastics, and the Blue Bin doesn't take them either.",
       "start": {},
       "steps": [
@@ -384,7 +540,7 @@
       "name": "Baby wipes",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Wipes contain plastic fibres, so they aren't organics.",
       "start": {},
       "steps": [],
@@ -395,7 +551,7 @@
       "name": "Disposable mask",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Masks aren't packaging and aren't organic.",
       "start": {},
       "steps": [],
@@ -406,7 +562,7 @@
       "name": "Broken ceramic mug",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Ceramics aren't packaging and contaminate glass recycling.",
       "start": {},
       "steps": [],
@@ -417,7 +573,7 @@
       "name": "Broken drinking glass",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Drinking glasses and dishes are a different kind of glass from jars and bottles. Wrap sharp pieces.",
       "start": {},
       "steps": [],
@@ -429,7 +585,7 @@
       "level": 3,
       "bin": "garbage",
       "altBin": "donate",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Textiles never go in the Blue Bin. Donate it if it's still wearable.",
       "start": {},
       "steps": [],
@@ -441,7 +597,7 @@
       "level": 3,
       "bin": "garbage",
       "altBin": "donate",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Toys aren't packaging, even if they're plastic. Donate if usable.",
       "start": {},
       "steps": [],
@@ -452,7 +608,7 @@
       "name": "Wooden chopsticks",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Toronto's Blue Bin doesn't take wood, and the Green Bin doesn't take wood pieces.",
       "start": {},
       "steps": [],
@@ -463,7 +619,7 @@
       "name": "Hair or pet fur",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 4,
+      "exitNode": "leaf-other-garbage",
       "reason": "Hair and fur aren't accepted in Toronto's Green Bin.",
       "start": {},
       "steps": [],
@@ -474,12 +630,10 @@
       "name": "Paper towel used with cleaning spray",
       "level": 3,
       "bin": "garbage",
-      "exitStep": 3,
+      "exitNode": "leaf-tissue-garbage",
       "reason": "Paper soiled with cleaning chemicals goes in Garbage, not the Green Bin.",
       "start": {},
       "steps": [],
-      "exception": true,
-      "note": "Exception at step 3.",
       "verified": true
     },
     {
@@ -487,7 +641,7 @@
       "name": "AA batteries",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Batteries are household hazardous waste and can start fires. Tape the positive end and take them to a drop-off.",
       "start": {
         "terminals": true
@@ -502,7 +656,7 @@
       "name": "Lithium-ion battery (phone or laptop)",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Lithium-ion batteries are household hazardous waste and must never go in any bin. Tape the terminals first.",
       "start": {
         "terminals": true
@@ -517,7 +671,7 @@
       "name": "Phone charger",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Chargers and cables are electronic waste. Take them to an e-waste drop-off.",
       "start": {},
       "steps": [],
@@ -528,7 +682,7 @@
       "name": "Leftover paint",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Paint is household hazardous waste.",
       "start": {},
       "steps": [],
@@ -539,7 +693,7 @@
       "name": "Used needle",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Needles and syringes are household hazardous waste.",
       "start": {},
       "steps": [],
@@ -550,7 +704,7 @@
       "name": "Expired medication",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Medications are household hazardous waste in Toronto. Many pharmacies also take them back.",
       "start": {},
       "steps": [],
@@ -561,7 +715,7 @@
       "name": "Propane cylinder",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Pressurized cylinders are household hazardous waste.",
       "start": {},
       "steps": [],
@@ -572,7 +726,7 @@
       "name": "Fluorescent light bulb",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Fluorescent bulbs contain mercury.",
       "start": {},
       "steps": [],
@@ -580,10 +734,10 @@
     },
     {
       "id": "spray-paint",
-      "name": "Spray paint can with a flammable symbol",
+      "name": "Spray paint can",
       "level": 4,
       "bin": "special",
-      "exitStep": 1,
+      "exitNode": "leaf-special",
       "reason": "Aerosols with flammable, toxic or corrosive symbols aren't accepted in the Blue Bin. Regular hairspray and cooking spray cans are.",
       "start": {},
       "steps": [
@@ -596,7 +750,7 @@
       "name": "Empty wine bottle",
       "level": 4,
       "bin": "deposit",
-      "exitStep": 2,
+      "exitNode": "leaf-deposit",
       "reason": "Alcohol containers aren't accepted in the Blue Bin. Return them to The Beer Store for the deposit.",
       "start": {},
       "steps": [],

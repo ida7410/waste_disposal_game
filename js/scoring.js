@@ -37,16 +37,23 @@ export function scorePrep(item, state, binId, { gaveUp = false, actionsUsed = 0 
   return { ...base, outcome: 'correct', correct: true, points: POINTS.correct + bonus, bonus };
 }
 
-/** Score a finished Ask the Questions flow (js/flow.js). */
-export function scoreQuestions(fs) {
-  const { item } = fs;
+const WALK_POINTS = { correct: POINTS.correct, exception: POINTS.correct, 'gave-up': POINTS.partial, missed: POINTS.contamination };
+
+/**
+ * Score a finished Ask the Questions walk (js/flow.js): right leaf (or an
+ * exception reached by good reasoning) +10, "can't empty it now" +5, a miss -5.
+ */
+export function scoreQuestions(walk) {
+  const { item } = walk;
+  const correct = walk.outcome === 'correct' || walk.outcome === 'exception';
   return {
     itemId: item.id,
     correctBin: item.bin,
-    correct: fs.correct === true,
-    points: fs.correct ? POINTS.correct : POINTS.contamination,
+    outcome: walk.outcome,
+    correct,
+    points: WALK_POINTS[walk.outcome] ?? 0,
     reason: item.reason,
-    missedStep: fs.missed?.flowStep.step ?? null,
+    missedNode: walk.missed?.node.id ?? null,
     steps: Array.isArray(item.steps) ? item.steps : [],
   };
 }

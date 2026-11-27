@@ -1,80 +1,172 @@
-// flow.js, scoreQuestions, unlocks and scrapsTo.
+// js/flow.js (tree walk), scoreQuestions, Ask copy, and level unlocks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { expectedAnswer, pathFor, startFlow, answerFlow, currentEntry, destinationOf } from '../js/flow.js';
+import {
+  createFlow, nodeById, next, routeTo, startWalk, answerWalk, currentPrompt, expectedEmptyAnswer, destinationOf,
+} from '../js/flow.js';
 import { scoreQuestions, POINTS } from '../js/scoring.js';
 import { isUnlocked, recordLevel, UNLOCK_ACCURACY } from '../js/progress.js';
-import { validateData } from '../js/validate-core.js';
-import { actionDoneText, missedQuestionText } from '../js/text.js';
+import { askHeading, missedQuestionText, emptyFact, prepDoneText, labelReadText, noLabelText } from '../js/text.js';
+import { labelCaption } from '../js/art/prep-art.js';
 
 const real = JSON.parse(readFileSync(new URL('../data/items.json', import.meta.url), 'utf8'));
+const flow = createFlow(real);
 const byId = (id) => real.items.find((it) => it.id === id);
-const step = (n) => real.flow.find((f) => f.step === n);
 
-function play(item, override = {}) {
-  let fs = startFlow(real.flow, item);
-  while (!fs.done) {
-    const e = currentEntry(fs);
-    fs = answerFlow(fs, override[e.flowStep.step] ?? e.expected);
+// Walk an item along the route to `leaf`, answering the prep node as the item's
+// state requires. `override` replaces answers: { nodeId: answer } or { 'q-empty:can': 'no' }.
+function walkTo(item, leaf = item.exitNode, override = {}) {
+  let w = startWalk(flow, item);
+  for (const step of routeTo(flow, leaf)) {
+    if (w.done) break;
+    if (nodeById(flow, step.node).type === 'prep') {
+      w = answerWalk(flow, w, override[step.node] ?? expectedEmptyAnswer(item));
+      if (!w.done && w.stage === 'can-empty') w = answerWalk(flow, w, override[`${step.node}:can`] ?? 'yes');
+    } else {
+      w = answerWalk(flow, w, override[step.node] ?? step.answer);
+    }
   }
-  return fs;
+  return w;
 }
 
-test('answering every question as expected brings all 40 items to their own bin', () => {
+test('next() and routeTo() follow the tree', () => {
+  assert.equal(next(flow, 'q-hazard', 'no'), 'q-alcohol');
+  assert.equal(next(flow, 'q-mostly', 'paper'), 'q-paper-tissue');
+  assert.equal(next(flow, 'q-empty', 'ready'), 'q-compostable');
+  assert.equal(next(flow, 'q-empty', 'cant-empty'), 'leaf-cant-empty');
+  assert.equal(next(flow, 'q-hazard', 'maybe'), null);
+  assert.deepEqual(routeTo(flow, 'leaf-tissue-green').map((s) => s.node), ['q-hazard', 'q-alcohol', 'q-mostly', 'q-paper-tissue', 'q-tissue-chem']);
+  assert.equal(routeTo(flow, 'leaf-nowhere'), null);
+});
+
+test('all 40 items reach their own bin, by every fair route', () => {
   for (const item of real.items) {
-    const fs = play(item);
-    assert.equal(fs.correct, true, item.id);
-    assert.equal(fs.path.at(-1).flowStep.step, item.exitStep, item.id);
-    assert.equal(destinationOf(fs), item.bin, item.id);
+    for (const leaf of [item.exitNode, ...(item.alsoExitNodes ?? [])]) {
+      const w = walkTo(item, leaf);
+      assert.equal(w.outcome, 'correct', `${item.id} via ${leaf}`);
+      assert.equal(w.leaf.id, leaf, item.id);
+      assert.equal(destinationOf(w), item.bin, item.id);
+    }
   }
 });
 
-test('expected answers follow exitOn and the start state', () => {
-  const bottle = byId('water-bottle');
-  assert.equal(expectedAnswer(step(1), bottle), 'no'); // not dangerous
-  assert.equal(expectedAnswer(step(4), bottle), 'yes'); // is packaging (exitOn no)
-  assert.equal(expectedAnswer(step(5), bottle), 'no'); // not empty yet: empty it, continue
-  assert.equal(expectedAnswer(step(5), byId('cereal-box')), 'yes');
-  assert.equal(expectedAnswer(step(7), bottle), null); // "everything else": no question
-  assert.equal(expectedAnswer(step(2), byId('wine-bottle')), 'yes');
+test('cereal box: paper and packaging are both fair at "What is it mostly?"', () => {
+  const box = byId('cereal-box');
+  assert.equal(walkTo(box, 'leaf-paper-blue').outcome, 'correct');
+  assert.equal(walkTo(box, 'leaf-packaging-blue').outcome, 'correct');
+  const w = walkTo(box, 'leaf-paper-blue', { 'q-mostly': 'organics' });
+  assert.equal(w.outcome, 'missed');
+  assert.equal(w.missed.node.id, 'q-mostly');
+  assert.deepEqual(w.missed.expected.sort(), ['packaging', 'paper']);
 });
 
-test('the prep step is marked when the item needs emptying', () => {
-  const path = pathFor(real.flow, byId('sauce-jar'));
-  assert.deepEqual(path.map((p) => p.prep), [false, false, false, false, true, false, false]);
-  const fs = play(byId('sauce-jar'));
-  assert.equal(fs.answers.find((a) => a.step === 5).prep, true);
-  assert.equal(fs.auto.flowStep.step, 7, 'final step is reached without a question');
-});
-
-test('a wrong answer stops the flow at the missed question', () => {
-  const fs = play(byId('pop-can'), { 5: 'yes' }); // says it's empty when it isn't
-  assert.equal(fs.done, true);
-  assert.equal(fs.correct, false);
-  assert.equal(fs.missed.flowStep.step, 5);
-  assert.equal(fs.answers.length, 5);
-
-  const early = play(byId('banana-peel'), { 3: 'no' });
-  assert.equal(early.missed.flowStep.step, 3);
-  const r = scoreQuestions(early);
+test('the walk stops at the first answer that leaves the route', () => {
+  const w = walkTo(byId('banana-peel'), undefined, { 'q-mostly': 'paper' });
+  assert.equal(w.done, true);
+  assert.equal(w.outcome, 'missed');
+  assert.equal(w.missed.node.id, 'q-mostly');
+  assert.equal(w.answers.length, 3);
+  assert.deepEqual(w.missed.expected, ['organics']);
+  const r = scoreQuestions(w);
   assert.equal(r.correct, false);
   assert.equal(r.points, POINTS.contamination);
-  assert.equal(r.missedStep, 3);
+  assert.equal(r.missedNode, 'q-mostly');
   assert.equal(r.reason, byId('banana-peel').reason);
+  assert.equal(answerWalk(flow, w, 'yes'), w, 'nothing changes once done');
 });
 
-test('exception items exit at their step but go to their own bin', () => {
+test('"Is it empty?" is judged against the start state', () => {
+  assert.equal(expectedEmptyAnswer(byId('coffee-cup')), 'no');
+  assert.equal(expectedEmptyAnswer(byId('chip-bag')), 'yes');
+  const full = walkTo(byId('coffee-cup'), undefined, { 'q-empty': 'yes' });
+  assert.equal(full.outcome, 'missed');
+  assert.equal(full.missed.node.id, 'q-empty');
+  assert.equal(full.missed.stage, 'empty');
+  const empty = walkTo(byId('chip-bag'), undefined, { 'q-empty': 'no' });
+  assert.equal(empty.outcome, 'missed');
+  assert.equal(empty.missed.stage, 'empty');
+});
+
+test('"Can you empty it now?": Yes preps and continues, No ends at the partial leaf (+5, never a miss)', () => {
+  const bottle = byId('water-bottle');
+  const yes = walkTo(bottle);
+  assert.equal(yes.prepped, true);
+  assert.ok(yes.answers.some((a) => a.stage === 'can-empty' && a.prep));
+
+  const no = walkTo(bottle, undefined, { 'q-empty:can': 'no' });
+  assert.equal(no.outcome, 'gave-up');
+  assert.equal(no.leaf.id, 'leaf-cant-empty');
+  assert.equal(destinationOf(no), 'garbage');
+  assert.ok(no.answers.every((a) => a.ok), 'no answer is marked wrong');
+  const r = scoreQuestions(no);
+  assert.equal(r.points, POINTS.partial);
+  assert.equal(r.correct, false);
+});
+
+test('prompts: Yes/No questions, a 4-option choice, and the two-part prep node', () => {
+  let w = startWalk(flow, byId('sauce-jar'));
+  assert.equal(currentPrompt(flow, w).kind, 'question');
+  assert.ok(currentPrompt(flow, w).examples.includes('light bulb'));
+  w = answerWalk(flow, answerWalk(flow, w, 'no'), 'no');
+  const choice = currentPrompt(flow, w);
+  assert.equal(choice.kind, 'choice');
+  assert.equal(choice.options.length, 4);
+  assert.ok(choice.options.every((o) => o.label && o.examples));
+  w = answerWalk(flow, w, 'packaging');
+  assert.equal(currentPrompt(flow, w).text, 'Is it empty, with no food or liquid left?');
+  w = answerWalk(flow, w, 'no');
+  assert.equal(currentPrompt(flow, w).text, 'Can you empty it now?');
+  assert.equal(currentPrompt(flow, w).options.length, 2);
+
+  const noCant = structuredClone(real);
+  delete noCant.flowNodes.find((n) => n.id === 'q-empty').cantEmptyTo;
+  const f2 = createFlow(noCant);
+  let w2 = startWalk(f2, byId('sauce-jar'));
+  for (const a of ['no', 'no', 'packaging', 'no']) w2 = answerWalk(f2, w2, a);
+  assert.deepEqual(currentPrompt(f2, w2).options.map((o) => o.answer), ['yes'], 'no "No" without cantEmptyTo');
+});
+
+test('an exception item reached by good reasoning counts as correct and keeps its real bin', () => {
+  const pod = {
+    id: 'coffee-pod', name: 'Compostable coffee pod', level: 2, bin: 'blue', exitNode: 'leaf-compostable-garbage',
+    exception: true, reason: 'Unlike compostable cups, Toronto takes coffee pods in the Blue Bin.', start: {}, steps: [],
+  };
+  const w = walkTo(pod);
+  assert.equal(w.outcome, 'exception');
+  assert.equal(destinationOf(w), 'blue');
+  assert.equal(scoreQuestions(w).points, POINTS.correct);
+  assert.equal(scoreQuestions(w).correct, true);
+});
+
+test('chemical paper towel goes down the tissue branch, no exception needed', () => {
   const towel = byId('chemical-paper-towel');
-  const fs = play(towel);
-  assert.equal(fs.path.at(-1).flowStep.exitTo, 'green');
-  assert.equal(destinationOf(fs), 'garbage');
-  assert.equal(scoreQuestions(fs).points, POINTS.correct);
+  assert.equal(towel.exception, undefined);
+  const w = walkTo(towel);
+  assert.equal(w.outcome, 'correct');
+  assert.equal(w.leaf.id, 'leaf-tissue-garbage');
 });
 
-test('answering after the flow is done changes nothing', () => {
-  const fs = play(byId('aa-batteries'));
-  assert.equal(answerFlow(fs, 'no'), fs);
+test('Ask copy: headings, missed text, what the item holds, prep text', () => {
+  assert.ok(askHeading('correct', 'Green Bin').includes('Green Bin'));
+  assert.ok(askHeading('exception', 'Blue Bin').startsWith('Good reasoning, but this one is an exception'));
+  assert.ok(!/wrong/i.test(askHeading('missed', 'Blue Bin')));
+  assert.equal(missedQuestionText('What is it mostly?', ['Paper or cardboard', 'Packaging']),
+    'The tricky one was “What is it mostly?” For this item: Paper or cardboard or Packaging.');
+  assert.equal(emptyFact({ liquid: true }), 'It still has liquid in it.');
+  assert.equal(emptyFact({ food: true }), 'It still has food in it.');
+  assert.equal(emptyFact({}), 'It’s already empty.');
+  assert.equal(prepDoneText({ liquid: true, lid: false }, { liquidTo: 'sink' }), 'Pour it into the sink. Then put the lid back on.');
+  assert.equal(prepDoneText({ food: true }, { scrapsLabel: 'Green Bin' }), 'Scrape the food into the Green Bin.');
+});
+
+test('Read label: every item with a "flip" step has words for its label; others say there is nothing special', () => {
+  for (const item of real.items.filter((it) => it.steps.includes('flip'))) {
+    assert.ok(labelCaption(item.id).length > 10, `${item.id} needs a caption`);
+  }
+  assert.equal(labelCaption('milk-carton'), '');
+  assert.equal(labelReadText(labelCaption('compostable-cup')), 'The label says “COMPOSTABLE”.');
+  assert.ok(noLabelText().startsWith('Nothing special on the label'));
 });
 
 function memoryStore() {
@@ -95,19 +187,4 @@ test('levels unlock at 70% on the level before, per mode', () => {
   assert.equal(isUnlocked('prep-sort', 2, order, store), false, 'other modes keep their own unlocks');
   assert.equal(isUnlocked('quick-sort', 1, order, null), true, 'works without storage');
   assert.equal(isUnlocked('quick-sort', 2, order, null), false);
-});
-
-test('scrapsTo must be a known bin on the prep step, and names the bin in feedback', () => {
-  assert.equal(real.flow.find((f) => f.action).scrapsTo, 'green');
-  const bad = structuredClone(real);
-  bad.flow.find((f) => f.action).scrapsTo = 'moon';
-  assert.ok(validateData(bad).errors.some((e) => e.includes('scrapsTo is unknown bin "moon"')));
-  assert.equal(actionDoneText('scrape', { scrapsLabel: 'Green Bin' }), 'Scraped out. The scraps went in the Green Bin.');
-  assert.equal(actionDoneText('scrape'), 'Scraped out.');
-});
-
-test('missed question copy is friendly and names the right answer', () => {
-  const t = missedQuestionText(3, 'Is it food?', 'yes');
-  assert.ok(t.includes('Question 3') && t.includes('Yes'));
-  assert.ok(!/wrong/i.test(t));
 });

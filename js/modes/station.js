@@ -98,7 +98,6 @@ export function createStation({ tools, binEls, scrapsBin, onAction, onNoop, onBi
       lid.start(holder, state, () => finished('lid'), {
         cap: art.cap, capSvg: art.capSvg, reducedMotion: rm,
         isBlocked: () => blockedReason(state, 'lid'), onBlocked: () => say(EMPTY_FIRST),
-        onSnap: () => say('Now twist it on: circle the cap, or press “Lid on”.'),
       });
     }
   }

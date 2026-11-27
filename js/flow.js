@@ -1,71 +1,122 @@
-// Decision-flow logic for Ask the Questions (SPEC.md 4.3). No DOM.
-// Questions, exits and notes all come from data.flow; the expected answer
-// for an item is derived from its exitStep and start state, never hard-coded.
-import { createItemState, contaminants } from './state.js';
+// Walks the flowNodes question tree (SPEC.md 4.3, 8). No DOM.
+// Routes come from the tree itself (buildRoutes/nodeEdges, shared with the
+// validator); items only name the leaf they end at, so nothing is hard-coded.
+import { buildRoutes, nodeEdges } from './validate-core.js';
+import { createItemState, needsEmptying } from './state.js';
 
-const opposite = (a) => (a === 'yes' ? 'no' : 'yes');
+/** Index the tree once per data file. */
+export function createFlow(data) {
+  const nodes = new Map(data.flowNodes.map((n) => [n.id, n]));
+  return {
+    start: data.flowStart,
+    nodes,
+    routes: buildRoutes(data),
+    prepNode: data.flowNodes.find((n) => n.type === 'prep') ?? null,
+  };
+}
+
+export function nodeById(flow, id) {
+  return flow.nodes.get(id) ?? null;
+}
+
+/** The node an answer leads to, or null. Prep nodes answer 'ready' or 'cant-empty'. */
+export function next(flow, nodeId, answer) {
+  return nodeEdges(flow.nodes.get(nodeId)).find((e) => e.answer === answer)?.to ?? null;
+}
+
+/** Steps from flowStart to a node: [{ node, answer }], or null if unreachable. */
+export function routeTo(flow, leafId) {
+  return flow.routes.get(leafId) ?? null;
+}
+
+// ---- One item's walk (Ask the Questions) ----
+// A walk is a plain object; every function returns a new one.
+// stage: 'ask' at most nodes; at the prep node 'empty' ("Is it empty?") then
+// 'can-empty' ("Can you empty it now?").
+
+export function startWalk(flow, item) {
+  const leaves = [item.exitNode, ...(Array.isArray(item.alsoExitNodes) ? item.alsoExitNodes : [])];
+  const fair = leaves.map((leaf) => ({ leaf, steps: routeTo(flow, leaf) ?? [] }));
+  return { item, at: flow.start, depth: 0, stage: stageFor(nodeById(flow, flow.start)), fair, answers: [], done: false, outcome: null, missed: null, leaf: null, prepped: false };
+}
+
+function stageFor(node) {
+  return node?.type === 'prep' ? 'empty' : 'ask';
+}
 
 /**
- * The answer that keeps an item on its path at a flow step:
- * - its exit step: the step's exitOn (null for the final "everything else" step)
- * - the prep step ("Is it empty?"): exitOn if the item starts with liquid/food/dirt
- *   (empty it, then continue), otherwise the opposite
- * - any other earlier step: the opposite of exitOn, so it doesn't exit there
+ * What to show for the walk's current step:
+ * { node, kind: 'question' | 'choice', text, examples, options: [{ answer, label, examples }] }
  */
-export function expectedAnswer(flowStep, item) {
-  if (flowStep.step === item.exitStep) return flowStep.exitOn ?? null;
-  if (flowStep.action) {
-    return contaminants(createItemState(item)).length ? flowStep.exitOn : opposite(flowStep.exitOn);
+export function currentPrompt(flow, walk) {
+  if (walk.done) return null;
+  const node = nodeById(flow, walk.at);
+  if (node.type === 'prep') {
+    const yesNo = [{ answer: 'yes', label: 'Yes' }, { answer: 'no', label: 'No' }];
+    if (walk.stage === 'empty') return { node, kind: 'question', text: node.question, options: yesNo };
+    // "No" here ends at cantEmptyTo, so it's only offered if that leaf exists.
+    const options = node.cantEmptyTo ? yesNo : yesNo.slice(0, 1);
+    return { node, kind: 'question', text: node.prepQuestion, options };
   }
-  return flowStep.exitOn ? opposite(flowStep.exitOn) : null;
+  return {
+    node,
+    kind: node.type === 'choice' ? 'choice' : 'question',
+    text: node.question,
+    examples: node.examples ?? '',
+    options: node.options.map((o) => ({ answer: o.answer, label: o.label ?? o.answer, examples: o.examples ?? '' })),
+  };
 }
 
-/** The steps an item goes through, up to and including its exit step. */
-export function pathFor(flow, item) {
-  return flow
-    .filter((f) => f.step <= item.exitStep)
-    .map((f) => {
-      const expected = expectedAnswer(f, item);
-      return {
-        flowStep: f,
-        expected,
-        exits: f.step === item.exitStep,
-        prep: Boolean(f.action) && expected === f.exitOn,
-      };
-    });
+/** The right answer to "Is it empty?" comes from the item's start state. */
+export function expectedEmptyAnswer(item) {
+  return needsEmptying(createItemState(item)) ? 'no' : 'yes';
 }
 
-export function startFlow(flow, item) {
-  return skipAutomatic({ item, path: pathFor(flow, item), index: 0, answers: [], done: false, correct: null, missed: null });
+/** Answer the current prompt. Leaving every fair route stops the walk at this node. */
+export function answerWalk(flow, walk, answer) {
+  if (walk.done) return walk;
+  const node = nodeById(flow, walk.at);
+  if (node.type === 'prep') return answerPrep(flow, walk, node, answer);
+
+  const alive = walk.fair.filter((r) => r.steps[walk.depth]?.node === node.id && r.steps[walk.depth]?.answer === answer);
+  const answers = [...walk.answers, { node: node.id, stage: 'ask', answer, ok: alive.length > 0 }];
+  if (!alive.length) return miss(walk, answers, node, 'ask', fairAnswers(walk, node));
+  return moveTo(flow, { ...walk, answers, fair: alive }, next(flow, node.id, answer));
 }
 
-export function currentEntry(fs) {
-  return fs.path[fs.index] ?? null;
+function answerPrep(flow, walk, node, answer) {
+  if (walk.stage === 'empty') {
+    const expected = expectedEmptyAnswer(walk.item);
+    const ok = answer === expected;
+    const answers = [...walk.answers, { node: node.id, stage: 'empty', answer, ok }];
+    if (!ok) return miss(walk, answers, node, 'empty', [expected]);
+    if (answer === 'yes') return moveTo(flow, { ...walk, answers }, node.ifReady);
+    return { ...walk, answers, stage: 'can-empty' };
+  }
+  // "Can you empty it now?" is the player's choice: never a miss.
+  const answers = [...walk.answers, { node: node.id, stage: 'can-empty', answer, ok: true, prep: answer === 'yes' }];
+  if (answer === 'yes') return moveTo(flow, { ...walk, answers, prepped: true }, node.ifReady);
+  return { ...walk, answers, at: node.cantEmptyTo, done: true, outcome: 'gave-up', leaf: nodeById(flow, node.cantEmptyTo) };
 }
 
-/**
- * Answer the current question ('yes' | 'no'). A wrong answer ends the flow
- * and records which question was missed; reaching the exit ends it correctly.
- */
-export function answerFlow(fs, answer) {
-  if (fs.done) return fs;
-  const entry = currentEntry(fs);
-  const ok = answer === entry.expected;
-  const answers = [...fs.answers, { step: entry.flowStep.step, answer, expected: entry.expected, ok, prep: ok && entry.prep }];
-  if (!ok) return { ...fs, answers, done: true, correct: false, missed: entry };
-  if (entry.exits) return { ...fs, answers, done: true, correct: true };
-  return skipAutomatic({ ...fs, answers, index: fs.index + 1 });
+function moveTo(flow, walk, nodeId) {
+  const node = nodeById(flow, nodeId);
+  const moved = { ...walk, at: nodeId, depth: walk.depth + 1, stage: stageFor(node) };
+  if (node?.type !== 'leaf') return moved;
+  const exception = walk.item.exception === true && nodeId === walk.item.exitNode;
+  return { ...moved, done: true, leaf: node, outcome: exception ? 'exception' : 'correct' };
 }
 
-// The final step ("Everything else") has no yes/no: reaching it is the answer.
-function skipAutomatic(fs) {
-  const entry = currentEntry(fs);
-  if (entry && entry.expected === null && entry.exits) return { ...fs, done: true, correct: true, auto: entry };
-  return fs;
+function miss(walk, answers, node, stage, expected) {
+  return { ...walk, answers, done: true, outcome: 'missed', missed: { node, stage, expected } };
 }
 
-/** Where the flow sends this item: the exit step's bin, or the item's own bin for exceptions. */
-export function destinationOf(fs) {
-  const exit = fs.path[fs.path.length - 1]?.flowStep;
-  return fs.item.exception === true ? fs.item.bin : exit?.exitTo ?? fs.item.bin;
+// The answers at `node` that stay on a fair route (more than one for e.g. the cereal box).
+function fairAnswers(walk, node) {
+  return [...new Set(walk.fair.filter((r) => r.steps[walk.depth]?.node === node.id).map((r) => r.steps[walk.depth].answer))];
+}
+
+/** Where the item really goes: its own bin (exceptions included), or the partial leaf's bin. */
+export function destinationOf(walk) {
+  return walk.outcome === 'gave-up' ? walk.leaf?.bin ?? walk.item.bin : walk.item.bin;
 }

@@ -38,9 +38,10 @@ css/theme.css          # all colors, fonts, radii as CSS variables (partner resk
 css/style.css
 js/main.js             # boot, routing between modes and levels
 js/data.js             # load + validate items.json
+js/validate-core.js    # data rules shared by browser and scripts/validate.mjs - no DOM
 js/state.js            # item state model (liquid, food, dirty, lid, ...) - no DOM
 js/scoring.js          # scoring rules - no DOM
-js/flow.js             # decision-flow logic - no DOM
+js/flow.js             # walks flowNodes tree; routeTo(leafId), next(nodeId, answer) - no DOM
 js/events.js           # emits window.SortRight.onEvent hook
 js/modes/quick-sort.js
 js/modes/prep-sort.js
@@ -60,7 +61,7 @@ tests/
 
 ## Rules about disposal content (important)
 - **Never hard-code which bin an item goes in.** All rules, reasons and questions come from `data/items.json`.
-- **Do not change any `bin`, `exitStep`, `reason` or `steps` value** unless the human asks or gives a source. These rules are checked against City of Toronto / Circular Materials guidance.
+- **Do not change any `bin`, `exitNode`, `alsoExitNodes`, `exception`, `reason` or `steps` value, or the questions in `flowNodes`,** unless the human asks or gives a source. These rules are checked against City of Toronto / Circular Materials guidance.
 - Do not add new items with guessed answers. If asked to add items, mark them `"verified": false` and list them in your summary for a human to check in Toronto's Waste Wizard.
 - Feedback copy: short, friendly, never shaming. Always show the item's `reason`.
 

@@ -55,9 +55,15 @@ People learn sorting rules in quizzes but still sort incorrectly at the real bin
 - **"Can't empty it now" button** for items with liquid or food: choices are "Carry it" (item moves to an inventory slot and comes back 2 items later) or "Garbage" (partial points). Blue Bin while full = no points for that item (and a splash).
 
 ### 4.3 Ask the Questions (decision flow)
-- The player gets an item and answers the yes/no questions in `flow` in order.
-- The game stops at the item's `exitStep` and shows where it goes and why.
-- If the player answers wrongly, show which question they missed and the `reason`.
+- The player gets an item and walks the flow tree from `flowStart`, one node at a time.
+  - `question` nodes: Yes / No buttons.
+  - `choice` node ("What is it mostly?"): one button per option (four), each showing its `examples`.
+  - `prep` node: "Is it empty?" Yes continues to `ifReady`. No asks `prepQuestion` ("Can you empty it now?"): Yes shows the prep (liquid to the sink, scraps to the `scrapsTo` bin) and continues to `ifReady`; No ends at `cantEmptyTo` with partial points (+5), same as Prep & Sort. "Yes" (`expectedPrepAnswer`) is the full-points answer, but No is never marked wrong. If the node has no `cantEmptyTo`, No is not offered.
+    - "Is it empty?" is judged against the item's `start` state: with `liquid` or `food` true, the right answer is No; otherwise Yes. Answering Yes for a full item, or No for an empty one, is a miss at this node (show the item's state, e.g. "It still has coffee in it."). The `prepQuestion` answer is a player choice, so it is never a miss.
+- The game stops at a leaf and shows the bin, the leaf's `note` (e.g. "Keep lids on.") and the item's `reason`.
+- **Correct** = the leaf reached is the item's `exitNode` or one of its `alsoExitNodes`. Two routes that reach the same bin are both fair (e.g. cereal box as paper or as packaging), so never mark one of them wrong.
+- **Exceptions:** if an item has `exception: true`, the flow's leaf is not its bin. When the player reaches the `exitNode`, show "Good reasoning, but this one is an exception" plus the real bin and `reason`, and count it correct.
+- If the player goes wrong, show the first node where their answer left the item's route, and the `reason`.
 - Purpose: teach a method that works for unknown items.
 
 ## 5. Interactions (acceptance criteria)
@@ -74,7 +80,7 @@ All interactions use **Pointer Events** (one code path for touch + mouse) and ea
 
 ### 5.2 Lid — Priority 1
 - A loose cap appears near the bottle.
-- Player drags the cap onto the bottle neck (snap within ~24 px), then does a circular swipe (or taps "Twist") to screw it on.
+- Player drags the cap onto the bottle neck. It snaps on within ~24 px, and that's the lid on (no separate twist step: a placed-but-untwisted cap looked finished and confused players).
 - State `lid` becomes `true`.
 - Ontario rule shown in feedback: **keep lids on**.
 
@@ -116,13 +122,24 @@ All game content comes from `data/items.json`. **No disposal rule may be hard-co
 
 Key fields (see file for full schema):
 - `bins[]`: `id`, `label`, `color`.
-- `flow[]`: ordered yes/no questions; `exitOn` ("yes"/"no") and `exitTo` (bin id) or `action` (for the empty/rinse step). The `action` step may set optional `cantEmptyTo` (bin id): where an item goes if the player can't empty it now (Prep & Sort's "Can't empty it now → Garbage"). If it's missing, only "Carry it" is offered. It may also set optional `scrapsTo` (bin id): where scraped-out food goes (the scrape gesture flicks scraps there). If it's missing, scraps just disappear.
+- `flowStart`: id of the first node.
+- `flowNodes[]`: the decision tree. Every node has `id` and `type`:
+  - `question`: `question`, optional `examples`, `options` = exactly `yes` and `no`, each with `next` (node id).
+  - `choice`: `question`, `options[]` each with `answer`, `label`, optional `examples`, `next`.
+  - `prep`: `question` ("Is it empty?"), `prepQuestion`, `expectedPrepAnswer`, `liquidTo` (display text only, e.g. "sink" in "Pour it into the sink"; not a bin and not validated), `ifReady` (node id). Optional `cantEmptyTo`: a leaf with `partial: true` where an item ends if the player can't empty it now (Prep & Sort's "Can't empty it now → Garbage"); if it's missing, only "Carry it" is offered. Optional `scrapsTo` (bin id): where scraped-out food goes (the scrape gesture flicks scraps there); if it's missing, scraps just disappear. Prep & Sort reads both from this node.
+  - `leaf`: `bin`, optional `note`, optional `partial: true` (player-choice outcome worth +5; no item may end there).
+  The tree must be a real tree: every node reachable from `flowStart`, reached from exactly one place, no loops.
 - `actions[]`: allowed action ids.
-- `items[]`: `id`, `name`, `level`, `bin`, `exitStep`, `reason`, `start` (state flags), `steps` (ordered action ids), optional `note`, `altBin`.
+- `items[]`: `id`, `name`, `level`, `bin`, `exitNode` (the leaf its correct route ends at), `reason`, `start` (state flags), `steps` (ordered action ids), optional `alsoExitNodes`, `note`, `altBin`, `exception`, `verified`.
 
 State flags used: `liquid`, `food`, `dirty`, `lid` (`false` means lid is off and must be put on), `parts`, `terminals` (battery exposed).
 
-Optional item fields: `exception: true` (bin differs from where its `exitStep` normally leads, e.g. chemical-soiled paper towel), `verified: false` (not yet checked against Waste Wizard; validator warns).
+Optional item fields:
+- `alsoExitNodes`: other leaves that are a fair route for this item. Each must end in the item's `bin`.
+- `exception: true`: the item really breaks the flow's rule, so its `exitNode` leaf's bin differs from its `bin` (e.g. "compostable" coffee pods → Blue Bin, while the flow sends compostable items to Garbage). The `reason` must explain the exception.
+- `verified: false`: not yet checked against Waste Wizard; validator warns.
+
+Routes are not stored on items. Code works them out from the tree (`js/flow.js` exports `routeTo(leafId)` returning the node/answer steps from `flowStart`).
 
 ### 8.1 Adding items (no API in the prototype)
 There is deliberately no write API. GitHub Pages can't host one, and every new item must be checked against Toronto's rules before players see it.
@@ -133,7 +150,7 @@ Process:
 3. Open a pull request. The template asks for Waste Wizard results for each new item.
 4. A GitHub Action runs the validator on every PR. A teammate reviews and merges. GitHub Pages redeploys automatically.
 
-`scripts/validate.mjs` fails on: unknown bins/actions/levels/state flags, duplicate or badly formatted ids, missing or empty `reason`, `exitStep` that isn't an exit or doesn't match `bin` (unless `exception: true`), and steps that don't match the start state (e.g. liquid but no `pour`). It warns on `verified: false` and levels with fewer than 10 items.
+`scripts/validate.mjs` (rules in `js/validate-core.js`) fails on: unknown bins/actions/levels/state flags; duplicate or badly formatted ids; missing or empty `reason`; a flow that isn't a tree (unknown targets, unreachable nodes, a node reached from two places, loops); questions without exactly Yes/No; a `cantEmptyTo` that isn't a partial leaf, or a `scrapsTo` that isn't a bin; an `exitNode` that isn't a leaf, is a partial leaf, or leads to a different bin (unless `exception: true`); `exception: true` on an item the flow already gets right; `alsoExitNodes` ending in a different bin; steps that don't match the start state (e.g. liquid but no `pour`); and the old `flow`/`exitStep` fields. It warns on `verified: false`, levels with fewer than 10 items, and items with food or liquid whose route skips the "empty it" node.
 
 ### 8.2 Data source is swappable (future API)
 All loading goes through one function: `loadGameData(url)` in `js/data.js`.

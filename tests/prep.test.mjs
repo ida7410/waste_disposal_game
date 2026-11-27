@@ -9,6 +9,7 @@ import { scorePrep, POINTS, STRAIGHT_IN_BONUS } from '../js/scoring.js';
 import { createRound, currentItem, defer, answer, next, remaining } from '../js/round.js';
 import { stateChips, prepHeading, nextTimeSentence, toolLabel } from '../js/text.js';
 import { validateData } from '../js/validate-core.js';
+import { createFlow, nodeById } from '../js/flow.js';
 
 const real = JSON.parse(readFileSync(new URL('../data/items.json', import.meta.url), 'utf8'));
 const byId = (id) => real.items.find((it) => it.id === id);
@@ -140,19 +141,17 @@ test('defer moves the current item two places later, or to the end', () => {
   assert.equal(currentItem(next(answered)).id, 'b');
 });
 
-test('flow cantEmptyTo must be a known bin on the prep step', () => {
-  assert.equal(real.flow.find((f) => f.action).cantEmptyTo, 'garbage');
-  const bad = structuredClone(real);
-  bad.flow.find((f) => f.action).cantEmptyTo = 'moon';
-  bad.flow[0].cantEmptyTo = 'garbage';
-  const res = validateData(bad);
-  assert.equal(res.fatal, true);
-  assert.ok(res.errors.some((e) => e.includes('cantEmptyTo is unknown bin "moon"')));
-  assert.ok(res.errors.some((e) => e.includes('is not the prep step')));
-
-  const missing = structuredClone(real);
-  delete missing.flow.find((f) => f.action).cantEmptyTo;
-  assert.deepEqual(validateData(missing).errors, [], 'optional');
+test('Prep & Sort reads "can\'t empty" and scraps from the prep node', () => {
+  // (The tree rules for these fields are covered in validate-tree.test.mjs.)
+  const flow = createFlow(real);
+  assert.equal(flow.prepNode.id, 'q-empty');
+  const leaf = nodeById(flow, flow.prepNode.cantEmptyTo);
+  assert.equal(leaf.partial, true);
+  assert.equal(leaf.bin, 'garbage');
+  assert.ok(leaf.note.length > 10, 'gave-up feedback comes from the leaf note');
+  assert.equal(flow.prepNode.scrapsTo, 'green');
+  assert.equal(nodeById(flow, byId('water-bottle').exitNode).note, 'Keep lids on.');
+  assert.deepEqual(validateData(real).errors, []);
 });
 
 test('prep copy', () => {
@@ -160,6 +159,5 @@ test('prep copy', () => {
   assert.deepEqual(stateChips({ lid: true }), []);
   assert.ok(prepHeading('wrong', 'Green Bin').includes('Green Bin'));
   assert.ok(!/wrong/i.test(prepHeading('wrong', 'Green Bin')));
-  assert.equal(nextTimeSentence(['lid']), 'Next time: put the lid on.');
-  assert.equal(toolLabel('pour'), 'Pour out');
+  assert.equal(nextTimeSentence(['lid']), 'Next time: put the lid on.');  assert.equal(toolLabel('pour'), 'Pour out');
 });

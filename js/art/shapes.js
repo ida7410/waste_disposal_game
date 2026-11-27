@@ -86,6 +86,6 @@ export const SHAPES = {
     <rect x="38" y="80" width="44" height="24" rx="5" fill="#e4e8ec" ${O}/>`,
   spray: (c) => `<rect x="38" y="34" width="44" height="72" rx="6" fill="${c}" ${O}/>
     <path d="M44 34c0-10 32-10 32 0" fill="#d0d6dc" ${O}/><rect x="54" y="16" width="12" height="10" rx="2" fill="#8a96a3" ${O}/>
-    <path d="M60 60c6 6 8 12 2 20-2-6-6-6-6-12 0 6-4 8-4 12-4-8 2-16 8-20z" fill="#ffffff"/>`,
+    <rect x="38" y="56" width="44" height="8" fill="#ffffff" opacity=".55"/>`,
   generic: (c) => `<rect x="28" y="28" width="64" height="64" rx="12" fill="${c}" ${O}/>`,
 };

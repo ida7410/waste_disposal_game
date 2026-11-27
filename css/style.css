@@ -194,7 +194,7 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 }
 @keyframes drip { from { transform: translateY(0); opacity: 1; } to { transform: translateY(24px); opacity: .2; } }
 
-/* Lid: loose cap, snap ring, twist progress ring. Positioned by its centre. */
+/* Lid: loose cap and snap ring. Positioned by its centre. */
 .cap {
   position: absolute; z-index: 13; width: 44px; height: 44px; margin: -22px 0 0 -22px;
   display: grid; place-items: center; border-radius: 50%;
@@ -203,9 +203,8 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .cap.is-loose { left: 92%; top: 96%; background: var(--color-accent-soft); }
 .cap.is-dragging { transition: none; }
 .cap svg { display: block; pointer-events: none; }
-.cap.on-neck { background: conic-gradient(var(--color-accent) calc(var(--twist, 0) * 1turn), transparent 0); cursor: grab; touch-action: none; }
-.cap.is-twisting svg { animation: twist .35s ease-in-out 2; }
-@keyframes twist { 50% { transform: rotate(-14deg) scaleX(.85); } }
+/* Snapping on: the cap slides to the neck, then the item is redrawn with its lid. */
+.cap.on-neck { background: transparent; pointer-events: none; }
 .neck-target {
   position: absolute; z-index: 11; transform: translate(-50%, -50%); border-radius: 50%;
   border: 2px dashed var(--color-accent); opacity: 0; pointer-events: none;
@@ -247,6 +246,13 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .ask-art { width: min(24vw, 96px, 14vh); flex: none; }
 .ask-art svg { width: 100%; height: 100%; display: block; }
 .ask .item-name { text-align: left; font-size: 1.2rem; }
+.ask-item-info { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.btn-small { padding: 6px 14px; font-size: .95rem; }
+.btn-small:disabled { opacity: .55; cursor: default; }
+.label-text {
+  width: 100%; font-size: .95rem; padding: 8px 12px; border-radius: var(--radius-small);
+  background: var(--color-accent-soft); color: var(--color-text);
+}
 .trail { width: 100%; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .trail li {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-size: .9rem;
@@ -264,6 +270,18 @@ ul[role="list"] { list-style: none; margin: 0; padding: 0; }
 .question-note { font-size: .9rem; color: var(--color-try); }
 .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 .answer { min-height: 56px; font-size: 1.15rem; }
+/* "What is it mostly?": one row per option, label + examples, number key on the left. */
+.answers.is-choice { grid-template-columns: 1fr; gap: 8px; }
+.answers.is-choice .answer {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center;
+  text-align: left; padding: 10px 14px; font-size: 1.05rem;
+}
+.answer-key {
+  grid-row: span 2; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%;
+  background: rgb(255 255 255 / .2); font-size: .9rem;
+}
+.answer-examples { grid-column: 2; font-size: .85rem; font-weight: 500; opacity: .9; }
+@media (min-width: 600px) { .answers.is-choice { grid-template-columns: 1fr 1fr; } }
 .dest { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
 
 /* Locked levels and unlock messages */

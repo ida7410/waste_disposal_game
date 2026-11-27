@@ -46,9 +46,21 @@ const TAPE = {
   cell: '<rect x="30" y="22" width="22" height="14" rx="2" fill="#e8c547" opacity=".95"/><rect x="70" y="22" width="22" height="14" rx="2" fill="#e8c547" opacity=".95"/>',
 };
 const LABELS = {
-  'compostable-cup': `<rect x="36" y="78" width="48" height="16" rx="4" fill="#fff" ${O}/><text x="60" y="90" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,sans-serif" fill="#2e7d32">COMPOSTABLE</text>`,
-  'spray-paint': `<path d="M60 70l14 14-14 14-14-14z" fill="#fff" stroke="#c0392b" stroke-width="3"/><path d="M60 77c4 4 5 8 1 13-1-4-4-4-4-8 0 4-3 5-3 8-2-5 2-10 6-13z" fill="#c0392b"/>`,
+  'compostable-cup': `<rect x="36" y="78" width="48" height="16" rx="4" fill="#fff" ${O}/><text x="60" y="89.5" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui,sans-serif" fill="#2e7d32" textLength="40" lengthAdjust="spacingAndGlyphs">COMPOSTABLE</text>`,
+  // A text label for now; real hazard symbols to come (owner is checking which ones).
+  'spray-paint': `<rect x="36" y="72" width="48" height="16" rx="4" fill="#fff" ${O}/><text x="60" y="83.5" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui,sans-serif" fill="#b03a2e" textLength="38" lengthAdjust="spacingAndGlyphs">FLAMMABLE</text>`,
 };
+// What each drawn label shows, in words: the picture can be too small to read,
+// and screen readers can't see it. Describes the drawing above, not a rule.
+const LABEL_CAPTIONS = {
+  'compostable-cup': 'The label says “COMPOSTABLE”.',
+  'spray-paint': 'The label says “FLAMMABLE”.',
+};
+
+/** Words for an item's drawn label, or '' if it has none. */
+export function labelCaption(itemId) {
+  return LABEL_CAPTIONS[itemId] ?? '';
+}
 
 // Smudges for state.dirty (any item).
 const DIRT = '<g class="dirt" fill="#8a6a3f" opacity=".75"><ellipse cx="48" cy="70" rx="7" ry="4"/><ellipse cx="70" cy="84" rx="6" ry="3.5"/><ellipse cx="62" cy="58" rx="4" ry="2.5"/></g>';
@@ -96,6 +108,17 @@ function withOverlays(item, state, svg, shape) {
     + (LABELS[item.id] && state.labelRead ? LABELS[item.id] : '')
     + (state.dirty ? DIRT : '');
   return extra ? svg.replace('</svg>', `${extra}</svg>`) : svg;
+}
+
+/**
+ * For modes with no "Read label" step (Quick Sort, Ask the Questions): the item
+ * in its start state, with any label already showing, so the name doesn't have
+ * to give it away and the player can still see it.
+ */
+export function drawWithLabelShowing(item) {
+  const state = { ...item.start };
+  if (Array.isArray(item.steps) && item.steps.includes('flip')) state.labelRead = true;
+  return drawPrepItem(item, state).svg;
 }
 
 /** Contamination splash: a sheet of paper in the bin gets stained, with droplets. */

@@ -74,7 +74,7 @@ test('invalid items are logged and skipped, valid ones kept', async () => {
   const logger = quietLogger();
   const data = await loadGameData(DEFAULT_DATA_URL, { fetchFn, logger });
   assert.equal(data.items.length, 38);
-  // bin "moon" also breaks the exitStep match, so 3 errors for 2 items.
+  // bin "moon" also breaks the exitNode match, so 3 errors for 2 items.
   assert.equal(logger.log.error.length, 3);
   assert.ok(!data.items.some((it) => it.id === real.items[0].id));
 });
