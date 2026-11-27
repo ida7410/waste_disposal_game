@@ -37,6 +37,20 @@ export function scorePrep(item, state, binId, { gaveUp = false, actionsUsed = 0 
   return { ...base, outcome: 'correct', correct: true, points: POINTS.correct + bonus, bonus };
 }
 
+/** Score a finished Ask the Questions flow (js/flow.js). */
+export function scoreQuestions(fs) {
+  const { item } = fs;
+  return {
+    itemId: item.id,
+    correctBin: item.bin,
+    correct: fs.correct === true,
+    points: fs.correct ? POINTS.correct : POINTS.contamination,
+    reason: item.reason,
+    missedStep: fs.missed?.flowStep.step ?? null,
+    steps: Array.isArray(item.steps) ? item.steps : [],
+  };
+}
+
 /** Score a Quick Sort answer: bin choice only, no state check. */
 export function scoreSort(item, binId) {
   const correct = binId === item.bin;

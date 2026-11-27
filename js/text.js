@@ -45,7 +45,7 @@ const TOOL_LABELS = {
 // What the player sees after doing an action (fallback actions use these as their explanation).
 const ACTION_DONE = {
   pour: 'Poured out. Empty containers keep paper in the bin clean.',
-  scrape: 'Scraped out. Scraps belong in the Green Bin.',
+  scrape: 'Scraped out.',
   rinse: 'Rinsed. A quick rinse is enough.',
   lid: 'Lid on.',
   separate: 'Separated. Different parts can go to different bins.',
@@ -74,8 +74,24 @@ export function toolLabel(action) {
   return TOOL_LABELS[action] ?? action;
 }
 
-export function actionDoneText(action) {
-  return ACTION_DONE[action] ?? 'Done.';
+/** scrapsLabel: label of the bin scraps go to (from data), if known. */
+export function actionDoneText(action, { scrapsLabel } = {}) {
+  const text = ACTION_DONE[action] ?? 'Done.';
+  return action === 'scrape' && scrapsLabel ? `${text} The scraps went in the ${scrapsLabel}.` : text;
+}
+
+// ---- Ask the Questions ----
+
+export function askHeading(correct, destinationLabel) {
+  return correct ? `Right! It goes to: ${destinationLabel}.` : `Good try. It goes to: ${destinationLabel}.`;
+}
+
+export function missedQuestionText(stepNumber, question, expected) {
+  return `Question ${stepNumber} was the tricky one: “${question}” The answer is ${expected === 'yes' ? 'Yes' : 'No'}.`;
+}
+
+export function yesNo(answer) {
+  return answer === 'yes' ? 'Yes' : 'No';
 }
 
 export function nothingToDoText(action) {

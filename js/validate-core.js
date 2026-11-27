@@ -85,9 +85,11 @@ function checkFlow(flow, binIds, errors) {
     if (f?.step !== i + 1) errors.push(`Flow step at position ${i + 1} has step ${f?.step}; steps must be 1, 2, 3... in order.`);
     if (f?.exitTo && !binIds.has(f.exitTo)) errors.push(`Flow step ${f.step} exits to unknown bin "${f.exitTo}".`);
     if (!f?.question) errors.push(`Flow step ${f?.step} has no question.`);
-    if (f?.cantEmptyTo === undefined) return;
-    if (!binIds.has(f.cantEmptyTo)) errors.push(`Flow step ${f.step} cantEmptyTo is unknown bin "${f.cantEmptyTo}".`);
-    if (!f.action) errors.push(`Flow step ${f.step} has cantEmptyTo but is not the prep step (no "action").`);
+    for (const key of ['cantEmptyTo', 'scrapsTo']) {
+      if (f?.[key] === undefined) continue;
+      if (!binIds.has(f[key])) errors.push(`Flow step ${f.step} ${key} is unknown bin "${f[key]}".`);
+      if (!f.action) errors.push(`Flow step ${f.step} has ${key} but is not the prep step (no "action").`);
+    }
   });
 }
 

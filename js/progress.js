@@ -3,6 +3,8 @@
 // Shape: { modes: { 'quick-sort': { 1: { best: 0.9 } } } }
 
 const KEY = 'sortright.progress.v2';
+// SPEC.md 7: the next level unlocks at 70% accuracy on the one before.
+export const UNLOCK_ACCURACY = 0.7;
 
 function defaultStore() {
   try {
@@ -25,6 +27,17 @@ export function loadProgress(store = defaultStore()) {
 export function bestAccuracy(mode, level, store = defaultStore()) {
   const best = loadProgress(store).modes?.[mode]?.[level]?.best;
   return typeof best === 'number' ? best : null;
+}
+
+/**
+ * The first level is always open; each later one opens once the level before
+ * it (in `levelOrder`) has a best of at least UNLOCK_ACCURACY in this mode.
+ */
+export function isUnlocked(mode, level, levelOrder, store = defaultStore()) {
+  const i = levelOrder.indexOf(level);
+  if (i <= 0) return true;
+  const prev = bestAccuracy(mode, levelOrder[i - 1], store);
+  return prev !== null && prev >= UNLOCK_ACCURACY;
 }
 
 export function recordLevel(mode, level, accuracy, store = defaultStore()) {

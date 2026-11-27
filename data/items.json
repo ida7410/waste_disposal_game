@@ -68,6 +68,7 @@
       "exitOn": "no",
       "action": "prep",
       "cantEmptyTo": "garbage",
+      "scrapsTo": "green",
       "note": "Empty it, then continue. If you can't empty it now, carry it or put it in Garbage."
     },
     {
