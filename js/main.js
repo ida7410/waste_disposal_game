@@ -8,6 +8,9 @@ import { startQuickSort } from './modes/quick-sort.js';
 import { startPrepSort } from './modes/prep-sort.js';
 import { startAskQuestions } from './modes/ask-questions.js';
 
+// Every import loaded: tell js/boot-check.js not to show its "couldn't start" screen.
+document.documentElement.dataset.booted = 'true';
+
 const root = document.getElementById('app');
 let data = null;
 let active = null; // running mode, so it can be stopped when we leave
