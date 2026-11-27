@@ -5,7 +5,7 @@ import { createRound, currentItem, answer, next, isDone, summarize, score } from
 import { prepSentence, resultHeading } from '../text.js';
 import { emit } from '../events.js';
 import { binIconSvg } from '../art/bins.js';
-import { itemSvg } from '../art/items.js';
+import { drawWithLabelShowing } from '../art/prep-art.js';
 
 const MODE = 'quick-sort';
 const HINT = 'Which bin does it go in? Tap a bin.';
@@ -46,7 +46,7 @@ export function startQuickSort(root, { bins, items, level, title, practice = fal
   function showItem() {
     const item = currentItem(round);
     answered = false;
-    itemEl.innerHTML = itemSvg(item.id);
+    itemEl.innerHTML = drawWithLabelShowing(item);
     nameEl.textContent = item.name;
     hintEl.textContent = HINT;
     hintEl.hidden = false;

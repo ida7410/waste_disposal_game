@@ -524,7 +524,7 @@
     },
     {
       "id": "compostable-cup",
-      "name": "Cup labelled \"compostable\"",
+      "name": "Cup with a label",
       "level": 3,
       "bin": "garbage",
       "exitNode": "leaf-compostable-garbage",

@@ -9,7 +9,7 @@ import { scoreQuestions } from '../scoring.js';
 import { askHeading, missedQuestionText, emptyFact, prepDoneText } from '../text.js';
 import { emit } from '../events.js';
 import { binIconSvg } from '../art/bins.js';
-import { drawPrepItem } from '../art/prep-art.js';
+import { drawWithLabelShowing } from '../art/prep-art.js';
 import { createItemState } from '../state.js';
 
 const MODE = 'ask-questions';
@@ -65,7 +65,7 @@ export function startAskQuestions(root, { data, items, level, title, practice = 
   function showItem() {
     const item = currentItem(round);
     walk = startWalk(flow, item);
-    artEl.innerHTML = drawPrepItem(item, createItemState(item)).svg;
+    artEl.innerHTML = drawWithLabelShowing(item);
     nameEl.textContent = item.name;
     trailEl.replaceChildren();
     feedback.hidden = true;
